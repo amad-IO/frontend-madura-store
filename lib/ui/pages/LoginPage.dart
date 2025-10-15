@@ -13,7 +13,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController();
+  final _username = TextEditingController();
   final _pass  = TextEditingController();
   bool _obscure = true;
 
@@ -44,12 +44,24 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  String? _vEmail(String? v){
-    if(v==null||v.trim().isEmpty) return 'Email tidak boleh kosong';
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if(!re.hasMatch(v.trim())) return 'Format email tidak valid';
+
+  String? _vUsername(String? v) {
+    final x = v?.trim() ?? '';
+    if (x.isEmpty) return 'Username tidak boleh kosong';
+
+    // aturan username:
+    // - 3–20 karakter
+    // - huruf, angka, titik (.), underscore (_), atau minus (-)
+    // - tidak boleh mulai/akhir dengan . _ -
+    // - tidak boleh ada dua simbol khusus berurutan (.. __ -- ._ _- dsb)
+    final re = RegExp(r'^(?=.{3,20}$)(?![._-])(?!.*[._-]{2})[a-zA-Z0-9._-]+(?<![._-])$');
+    if (!re.hasMatch(x)) {
+      return 'Gunakan 3–20 karakter: huruf/angka . _ - (tidak boleh diawali/diakhiri simbol)';
+    }
     return null;
   }
+
+
 
   String? _vPass(String? v){
     if(v==null||v.isEmpty) return 'Password tidak boleh kosong';
@@ -59,14 +71,16 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    FocusScope.of(context).unfocus(); // tutup keyboard
+    FocusScope.of(context).unfocus();
 
-    // 🚀 Langsung arahkan ke dashboard tanpa backend
+    final username = _username.text.trim(); // <- gunakan ini bila perlu
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const DashboardPage()),
     );
   }
+
 
   // void _submit(){
   //   if(!(_formKey.currentState?.validate()??false)) return;
@@ -76,8 +90,8 @@ class _LoginPageState extends State<LoginPage> {
   //   // TODO: auth & navigate (Navigator.pushReplacementNamed(context, AppRoutes.home);)
   // }
 
-  @override
-  void dispose() { _email.dispose(); _pass.dispose(); super.dispose(); }
+    @override
+    void dispose() { _username.dispose(); _pass.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
 
                             // Label Email
                             Text(
-                              'Email Address',
+                              'Username',
                               style: text.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: AppTheme.textPrimary,
@@ -218,16 +232,16 @@ class _LoginPageState extends State<LoginPage> {
 
                             // Field Email
                             TextFormField(
-                              controller: _email,
+                              controller: _username,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               decoration: _dec(
-                                hint: 'Enter your E-mail',
-                                icon: Icons.mail_outline_rounded,
+                                hint: 'Enter your Username',
+                                icon: Icons.person_outline_rounded,
                                 iconColor: AppTheme.textPrimary,
                                 fieldFill: cs.surface, // putih dari theme
                               ),
-                              validator: _vEmail,
+                              validator: _vUsername,
                             ),
 
                             const SizedBox(height: 20),
