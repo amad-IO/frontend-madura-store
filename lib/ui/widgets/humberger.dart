@@ -81,7 +81,7 @@ class _HamburgerPanel extends StatelessWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias, // agar isi ter-clip radius kanan
       decoration: const BoxDecoration(
-        color: AppTheme.primaryWhite,
+        color: AppTheme.primaryCream,
         // radius kanan saja
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(150),

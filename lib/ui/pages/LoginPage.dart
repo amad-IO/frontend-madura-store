@@ -348,11 +348,21 @@ class _LoginPageState extends State<LoginPage> {
                                     "Don’t have an account?",
                                     style: text.bodyMedium?.copyWith(color: cs.onSurface),
                                   ),
-                                  Text(
-                                    "Sign Up",
-                                    style: text.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: cs.primary),
+                                  InkWell(
+                                    onTap: () => Navigator.pushNamed(context, AppRoutes.register),
+                                    // kalau mau replace (tidak bisa back):
+                                    // onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.register),
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                                      child: Text(
+                                        "Sign Up",
+                                        style: text.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: cs.primary,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
