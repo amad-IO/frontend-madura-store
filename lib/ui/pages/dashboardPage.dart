@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../state/product_controller.dart';
 import '../../data/models/product.dart';
 import '../widgets/product_card.dart';
+import '../widgets/humberger.dart';
 
 
 class DashboardPage extends StatelessWidget {
@@ -89,15 +90,39 @@ class DashboardPage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // Menu di BAWAH-KIRI
-                        const Positioned(
+
+                        // Humberger
+                        Positioned(
                           left: 20,
                           bottom: 130,
-                          child: Icon(Icons.menu_rounded, color: Colors.white, size: 45),
+                          child: Builder(
+                             builder: (context) => IconButton(
+                              icon: const Icon(Icons.menu_rounded, size: 40, color: Colors.white),
+                              splashRadius: 28,
+                              onPressed: () {
+                               showHamburgerMenu(
+                                context,
+                                onLaporan: () {
+                                  // TODO: navigate ke halaman laporan
+                                  // Navigator.pushNamed(context, AppRoutes.report);
+                                },
+                                onTambahToko: () {
+                                // TODO: ke halaman tambah toko
+                                },
+                                onEditProduk: () {
+                                // TODO: ke halaman edit produk
+                                },
+                                onLogout: () {
+                                // TODO: proses logout
+                                },
+                              );
+                            },
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                ),
                 ),
 
                 // ====== PROFILE CARD (fixed) ======
