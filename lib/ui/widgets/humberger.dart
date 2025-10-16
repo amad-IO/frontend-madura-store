@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
 import 'dart:math' as math;
 
+
 /// Panggil ini dari tombol hamburger:
 /// await showHamburgerMenu(context, onLaporan: ..., onTambahToko: ..., onEditProduk: ..., onLogout: ...);
 Future<void> showHamburgerMenu(
@@ -17,7 +18,7 @@ Future<void> showHamburgerMenu(
     barrierDismissible: true,
     barrierLabel: 'Menu',
     barrierColor: Colors.black54, // backdrop
-    transitionDuration: const Duration(milliseconds: 280),
+    transitionDuration: const Duration(milliseconds: 350),
     pageBuilder: (context, _, __) {
       // kosong — UI dibangun di transitionBuilder
       return const SizedBox.shrink();

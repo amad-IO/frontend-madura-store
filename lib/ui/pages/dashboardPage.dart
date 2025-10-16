@@ -6,6 +6,7 @@ import '../../state/product_controller.dart';
 import '../../data/models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/humberger.dart';
+import '../../core/dialog_utils.dart';
 
 
 class DashboardPage extends StatelessWidget {
@@ -96,30 +97,27 @@ class DashboardPage extends StatelessWidget {
                           left: 20,
                           bottom: 130,
                           child: Builder(
-                             builder: (context) => IconButton(
+                            builder: (context) => IconButton(
                               icon: const Icon(Icons.menu_rounded, size: 40, color: Colors.white),
                               splashRadius: 28,
                               onPressed: () {
-                               showHamburgerMenu(
-                                context,
-                                onLaporan: () {
-                                  // TODO: navigate ke halaman laporan
-                                  // Navigator.pushNamed(context, AppRoutes.report);
-                                },
-                                onTambahToko: () {
-                                // TODO: ke halaman tambah toko
-                                },
-                                onEditProduk: () {
-                                // TODO: ke halaman edit produk
-                                },
-                                onLogout: () {
-                                // TODO: proses logout
-                                },
-                              );
-                            },
+                                showHamburgerMenu(
+                                  context,
+                                  onLaporan: () {
+                                    // TODO: navigate ke halaman laporan
+                                  },
+                                  onTambahToko: () {
+                                    // TODO: ke halaman tambah toko
+                                  },
+                                  onEditProduk: () {
+                                    // TODO: ke halaman edit produk
+                                  },
+                                  onLogout: () => handleLogout(context), // ✅ tambahkan ini
+                                );
+                              },
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
