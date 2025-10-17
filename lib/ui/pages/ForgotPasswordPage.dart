@@ -1,8 +1,9 @@
-// lib/ui/pages/forgot_password_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_theme.dart';
 import '../../core/app_routes.dart';
+
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -68,7 +69,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
 
     // contoh: lanjut ke halaman OTP kalau sudah ada
-    // Navigator.pushNamed(context, AppRoutes.otp, arguments: _phoneCtrl.text.trim());
+    Navigator.pushNamed(
+      context,
+      AppRoutes.forgotOTP,
+      arguments: _phoneCtrl.text.trim(),
+    );
   }
 
   @override
