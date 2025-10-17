@@ -289,7 +289,7 @@ class _LoginPageState extends State<LoginPage> {
                               child: TextButton(
                                 onPressed: () => Navigator.pushNamed(context, AppRoutes.forgot),
                                 child: Text(
-                                  'Forgot your password?',
+                                  'Forgot your ?',
                                   style: text.bodySmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: AppTheme.primaryRed,
