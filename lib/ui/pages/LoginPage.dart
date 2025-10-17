@@ -3,6 +3,7 @@ import '../../core/app_routes.dart';
 import '../../core/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../ui/pages/dashboardPage.dart';
+import '../../ui/pages/ForgotPasswordPage.dart';
 
 
 
@@ -221,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 28),
 
-                            // Label Email
+                            // Label username
                             Text(
                               'Username',
                               style: text.titleSmall?.copyWith(
@@ -286,7 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: (){},
+                                onPressed: () => Navigator.pushNamed(context, AppRoutes.forgot),
                                 child: Text(
                                   'Forgot your password?',
                                   style: text.bodySmall?.copyWith(
@@ -296,6 +297,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
+
 
                             const SizedBox(height: 12),
 

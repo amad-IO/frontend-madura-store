@@ -112,7 +112,7 @@ class DashboardPage extends StatelessWidget {
                                   onEditProduk: () {
                                     // TODO: ke halaman edit produk
                                   },
-                                  onLogout: () => handleLogout(context), // ✅ tambahkan ini
+                                  onLogout: () => handleLogout(context),
                                 );
                               },
                             ),
