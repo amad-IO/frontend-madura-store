@@ -9,17 +9,15 @@ class AppTheme {
 
   // Brand Colors
   static const Color primaryRed = Color(0xFFE53E3E);
+  static const Color error          = Color(0xFFE53E3E);
   static const Color primaryOrange = Color(0xFFF56545);
   static const Color primaryWhite = Color(0xFFFFFFFF);
   static const Color primaryCream = Color(0xFFFBF4EA);
   static const Color textPrimary    = Color(0xFF2D3748);
   static const Color textSubtle     = Color(0xFF718096);
   static const Color border         = Color(0xFFE2E8F0);
-  static const Color error          = Color(0xFFE53E3E);
-
-
-
   static const Color accentOrange = Color(0xFFF6AD55);
+
 
 
   // Surface and background colors
@@ -34,17 +32,13 @@ class AppTheme {
   static const Color shadowLight = Color(0x33000000); // 20% opacity black
   static const Color shadowDark = Color(0x1AFFFFFF);
 
-  // Dark theme variants
-  static const Color backgroundDark = Color(0xFF1A202C);
-  static const Color surfaceDark = Color(0xFF2D3748);
-  static const Color textPrimaryDark = Color(0xFFE2E8F0);
-  static const Color textSubtleDark = Color(0xFFA0AEC0);
-
+  //warna gradient
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment(1, 0.50),
     end: Alignment(-1, 0.50),
     colors: [primaryRed, primaryOrange],
   );
+
 
   /// theme - Professional Warmth
   static ThemeData theme = ThemeData(
