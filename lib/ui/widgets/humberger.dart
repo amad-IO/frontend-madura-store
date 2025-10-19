@@ -127,7 +127,7 @@ class _HamburgerPanel extends StatelessWidget {
               children: [
                 _OutlineMenuButton(
                   label: 'Laporan penjualan',
-                  icon: Icons.assessment_outlined,
+                  icon: Icons.bar_chart_rounded,
                   onTap: onLaporan,
                 ),
                 const SizedBox(height: 16),
@@ -140,6 +140,12 @@ class _HamburgerPanel extends StatelessWidget {
                 _OutlineMenuButton(
                   label: 'Edit produk',
                   icon: Icons.edit_outlined,
+                  onTap: onEditProduk,
+                ),
+                const SizedBox(height: 16),
+                _OutlineMenuButton(
+                  label: 'Tambah pengguna',
+                  icon: Icons.person_add_rounded,
                   onTap: onEditProduk,
                 ),
               ],
