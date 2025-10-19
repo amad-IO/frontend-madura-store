@@ -41,8 +41,8 @@ class AppTheme {
   static const Color textSubtleDark = Color(0xFFA0AEC0);
 
   static const LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment(-0.17, -0.99),
-    end: Alignment(0.17, 0.99),
+    begin: Alignment(1, 0.50),
+    end: Alignment(-1, 0.50),
     colors: [primaryRed, primaryOrange],
   );
 

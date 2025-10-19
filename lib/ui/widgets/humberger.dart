@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
-import 'dart:math' as math;
+
 
 
 /// Panggil ini dari tombol hamburger:
@@ -11,6 +11,7 @@ Future<void> showHamburgerMenu(
       VoidCallback? onLaporan,
       VoidCallback? onTambahToko,
       VoidCallback? onEditProduk,
+      VoidCallback? onTambahPengguna,
       VoidCallback? onLogout,
     }) {
   return showGeneralDialog(
@@ -45,6 +46,7 @@ Future<void> showHamburgerMenu(
                 onLaporan: onLaporan,
                 onTambahToko: onTambahToko,
                 onEditProduk: onEditProduk,
+                onTambahPengguna:onTambahPengguna,
                 onLogout: onLogout,
               ),
             ),
@@ -60,6 +62,7 @@ class _HamburgerPanel extends StatelessWidget {
   final VoidCallback? onLaporan;
   final VoidCallback? onTambahToko;
   final VoidCallback? onEditProduk;
+  final VoidCallback? onTambahPengguna;
   final VoidCallback? onLogout;
 
   const _HamburgerPanel({
@@ -67,6 +70,7 @@ class _HamburgerPanel extends StatelessWidget {
     this.onLaporan,
     this.onTambahToko,
     this.onEditProduk,
+    this.onTambahPengguna,
     this.onLogout,
   });
 
@@ -84,8 +88,8 @@ class _HamburgerPanel extends StatelessWidget {
         color: AppTheme.primaryCream,
         // radius kanan saja
         borderRadius: BorderRadius.only(
-          topRight: Radius.circular(150),
-          bottomRight: Radius.circular(15),
+          topRight: Radius.circular(50),
+          bottomRight: Radius.circular(50),
         ),
         boxShadow: [
           BoxShadow(
@@ -100,7 +104,7 @@ class _HamburgerPanel extends StatelessWidget {
         children: [
           // Header gradient (radius kanan saja)
           Container(
-            height: 140,
+            height: 200,
             decoration: const BoxDecoration(
               gradient: AppTheme.primaryGradient,
               borderRadius: BorderRadius.only(
@@ -110,7 +114,7 @@ class _HamburgerPanel extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
             alignment: Alignment.bottomLeft,
             child: Text(
-              'Menu Madura Store',
+              'Madura Store',
               style: t.titleLarge?.copyWith(
                 color: AppTheme.primaryWhite,
                 fontWeight: FontWeight.w700,
@@ -146,7 +150,7 @@ class _HamburgerPanel extends StatelessWidget {
                 _OutlineMenuButton(
                   label: 'Tambah pengguna',
                   icon: Icons.person_add_rounded,
-                  onTap: onEditProduk,
+                  onTap: onTambahPengguna,
                 ),
               ],
             ),
@@ -216,33 +220,38 @@ class _OutlineMenuButton extends StatelessWidget {
     final t = Theme.of(context).textTheme;
 
     return Material(
-      color: Colors.transparent,
+      color: AppTheme.primaryOrange,
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
+        splashColor: AppTheme.primaryRed,   // warna efek sentuh
+        highlightColor: AppTheme.primaryRed, // warna saat ditekan
         child: Container(
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 44,
+            width:250,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppTheme.primaryOrange, width: 1.2),
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppTheme.primaryRed),
-              const SizedBox(width: 12),
+              const SizedBox(width: 17),
+              Icon(icon, color: AppTheme.primaryCream,size:20),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: t.titleMedium?.copyWith(
-                    color: AppTheme.primaryRed,
+                    fontSize: 16,
+                    color: AppTheme.primaryCream,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
             ],
           ),
         ),
