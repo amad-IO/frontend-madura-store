@@ -1,218 +1,165 @@
+// lib/ui/pages/TambahToko.dart
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
-import 'package:flutter_svg/flutter_svg.dart';
+import '../../core/app_theme.dart';
 
-class Tambahtoko extends StatelessWidget {
-  const Tambahtoko({super.key});
+class TambahToko extends StatelessWidget {
+  const TambahToko({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Figma Flutter Generator Tambahtoko - FRAME
+    final t = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(247, 247, 247, 1),
-      body: SingleChildScrollView(
-        child: Container(
-          width: double.infinity,
-          height: 850, // disesuaikan agar tombol tidak keluar layar
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(50),
-              topRight: Radius.circular(50),
-              bottomLeft: Radius.circular(50),
-              bottomRight: Radius.circular(50),
-            ),
-            color: Color.fromRGBO(247, 247, 247, 1),
+      backgroundColor: AppTheme.primaryCream,
+      appBar: AppBar(
+        title: const Text('Tambah Toko'),
+        backgroundColor: AppTheme.primaryRed,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 2,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const SizedBox(height: 10),
+          _TokoCard(
+            namaToko: "Toko Cute",
+            alamat: "Jln. Ahmad Yani nomor 13",
+            kasir: "Aisyah",
+            onEdit: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Edit Toko Cute')),
+              );
+            },
           ),
-          child: Stack(
-            children: <Widget>[
-              // HEADER MERAH
-              Positioned(
-                top: 0,
-                left: 0,
-                child: Container(
-                  width: 430,
-                  height: 273,
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(50),
-                      topRight: Radius.circular(50),
-                      bottomLeft: Radius.circular(50),
-                      bottomRight: Radius.circular(50),
-                    ),
-                    color: Color.fromRGBO(245, 101, 69, 1),
-                  ),
-                ),
-              ),
+          _TokoCard(
+            namaToko: "Toko Madura 1",
+            alamat: "Jln. Jarwo nomor 5",
+            kasir: "Chelsy",
+            onEdit: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Edit Toko Madura 1')),
+              );
+            },
+          ),
+          _TokoCard(
+            namaToko: "Toko Madura 2",
+            alamat: "Jln. Ketintang nomor 17",
+            kasir: "Alief",
+            onEdit: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Edit Toko Madura 2')),
+              );
+            },
+          ),
+          const SizedBox(height: 30),
 
-              // JUDUL
-              const Positioned(
-                top: 38,
-                left: 139,
-                child: Text(
-                  'Tambah Toko',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color.fromRGBO(251, 234, 234, 1),
-                    fontFamily: 'Poppins',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal,
-                    height: 1,
-                  ),
+          // Tombol Tambah Toko
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: ElevatedButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Tambah Toko baru...')),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryOrange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
+                textStyle: t.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
+              child: const Text('Tambah Toko'),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
 
-              // ICON KEMBALI
-              Positioned(
-                top: 36,
-                left: 30,
-                child: InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    width: 33,
-                    height: 30,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                    ),
-                    child: SvgPicture.asset(
-                      'assets/images/vector.svg',
-                      semanticsLabel: 'back_icon',
-                      fit: BoxFit.scaleDown,
-                    ),
-                  ),
-                ),
+class _TokoCard extends StatelessWidget {
+  final String namaToko;
+  final String alamat;
+  final String kasir;
+  final VoidCallback? onEdit;
+
+  const _TokoCard({
+    required this.namaToko,
+    required this.alamat,
+    required this.kasir,
+    this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppTheme.border, width: 1),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: const [
+          BoxShadow(
+            color: AppTheme.shadowLight,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Nama Toko:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(namaToko, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
+          const SizedBox(height: 8),
+          Text('Alamat:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(alamat, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Nama Kasir:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(kasir, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
+                ],
               ),
-
-              // KOTAK UTAMA
-              Positioned(
-                top: 120,
-                left: 32,
-                child: Container(
-                  width: 366,
-                  height: 555,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    color: const Color.fromRGBO(254, 243, 226, 1),
+              ElevatedButton(
+                onPressed: onEdit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryRed,
+                  foregroundColor: Colors.white,
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Stack(
-                    children: <Widget>[
-                      const Positioned(
-                        top: 42,
-                        left: 94,
-                        child: Text(
-                          'TOKO MILIK ANDA',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color.fromRGBO(245, 101, 69, 1),
-                            fontFamily: 'Poppins',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 118,
-                        left: 65,
-                        child: Container(
-                          width: 261,
-                          height: 298,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(7),
-                            color: Colors.white,
-                            border: Border.all(
-                              color: const Color.fromRGBO(245, 101, 69, 1),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Toko A',
-                                  style: TextStyle(
-                                    color: Color.fromRGBO(245, 101, 69, 1),
-                                    fontFamily: 'Poppins',
-                                    fontSize: 16.8,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Jln. Ahmad Yani nomor. 13',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontFamily: 'Poppins',
-                                    fontSize: 11.5,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Aisyah',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontFamily: 'Poppins',
-                                    fontSize: 11.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 213,
-                        left: 65,
-                        child: Transform.rotate(
-                          angle: 0.2195 * (math.pi / 180),
-                          child: const Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                            endIndent: 45,
-                          ),
-                        ),
-                      ),
-                    ],
+                  textStyle: t.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-
-              // 🔽 TOMBOL DIPINDAHKAN KE ATAS (dari 716 → 680)
-              Positioned(
-                top: 680,
-                left: 135,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(245, 101, 69, 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    minimumSize: const Size(178, 40),
-                  ),
-                  onPressed: () {
-                    // aksi ketika tombol ditekan
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tambah Toko ditekan'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Tambah Toko',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Poppins',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
+                child: const Text('Edit'),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

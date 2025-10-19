@@ -30,6 +30,6 @@ class AppRoutes {
     forgot: (_)     => const ForgotPasswordPage(),
     forgotOTP: (_)  => const ForgotOTPPage(),   // <-- sekarang terdefinisi
     dashboard: (_)  => const DashboardPage(),
-    tambahToko: (_) => Tambahtoko(),      // <-- sesuaikan nama class
+    tambahToko: (_) => const TambahToko(),    // <-- sesuaikan nama class
   };
 }

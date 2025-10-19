@@ -7,7 +7,8 @@ import '../../data/models/product.dart';
 import '../../state/product_controller.dart';
 import '../widgets/product_card.dart';
 import '../widgets/humberger.dart';
-import 'TambahToko.dart';
+import '../../../core/app_routes.dart';
+
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -116,14 +117,8 @@ class DashboardPage extends StatelessWidget {
                                       // TODO: navigasi ke halaman laporan
                                     },
                                     onTambahToko: () {
-                                      Navigator.pop(context); // tutup menu dulu
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                          Tambahtoko(),
-                                        ),
-                                      );
+                                      Navigator.pop(context); // tutup menu
+                                      Navigator.pushNamed(context, AppRoutes.tambahToko);
                                     },
                                     onEditProduk: () {
                                       // TODO: navigasi ke halaman edit produk
