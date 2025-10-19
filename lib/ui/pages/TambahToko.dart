@@ -1,12 +1,28 @@
-// lib/ui/pages/TambahToko.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
+import '../../data/models/toko.dart';
+import '../../state/toko_controller.dart';
 
 class TambahToko extends StatelessWidget {
   const TambahToko({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      // sementara pakai mock; nanti ganti ke TokoController.http()
+      create: (_) => TokoController.mock()..load(),
+      child: const _TambahTokoView(),
+    );
+  }
+}
+
+class _TambahTokoView extends StatelessWidget {
+  const _TambahTokoView();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.watch<TokoController>();
     final t = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -18,64 +34,34 @@ class TambahToko extends StatelessWidget {
         centerTitle: true,
         elevation: 2,
       ),
-      body: ListView(
+      body: c.loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
         padding: const EdgeInsets.all(20),
         children: [
           const SizedBox(height: 10),
-          _TokoCard(
-            namaToko: "Toko Cute",
-            alamat: "Jln. Ahmad Yani nomor 13",
-            kasir: "Aisyah",
-            onEdit: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit Toko Cute')),
-              );
-            },
-          ),
-          _TokoCard(
-            namaToko: "Toko Madura 1",
-            alamat: "Jln. Jarwo nomor 5",
-            kasir: "Chelsy",
-            onEdit: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit Toko Madura 1')),
-              );
-            },
-          ),
-          _TokoCard(
-            namaToko: "Toko Madura 2",
-            alamat: "Jln. Ketintang nomor 17",
-            kasir: "Alief",
-            onEdit: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit Toko Madura 2')),
-              );
-            },
-          ),
-          const SizedBox(height: 30),
+          ...c.items.asMap().entries.map((entry) {
+            final i = entry.key;
+            final e = entry.value;
+            return _TokoCard(
+              key: ValueKey(e.id ?? i),
+              data: e,
+              onSave: (val) => c.saveAt(i, val),
+              onDelete: () => c.deleteAt(i), // <--- ini kuncinya
+            );
+          }),
 
-          // Tombol Tambah Toko
+          const SizedBox(height: 30),
           SizedBox(
-            width: double.infinity,
             height: 55,
+            width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tambah Toko baru...')),
-                );
-              },
+              onPressed: () => c.addEmpty(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryOrange,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                textStyle: t.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                textStyle: t.titleLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 18),
               ),
               child: const Text('Tambah Toko'),
             ),
@@ -87,18 +73,42 @@ class TambahToko extends StatelessWidget {
   }
 }
 
-class _TokoCard extends StatelessWidget {
-  final String namaToko;
-  final String alamat;
-  final String kasir;
-  final VoidCallback? onEdit;
+class _TokoCard extends StatefulWidget {
+  final Toko data;
+  final ValueChanged<Toko> onSave;
+  final VoidCallback onDelete;
 
   const _TokoCard({
-    required this.namaToko,
-    required this.alamat,
-    required this.kasir,
-    this.onEdit,
+    super.key,
+    required this.data,
+    required this.onSave,
+    required this.onDelete,     // <-- WAJIB
   });
+
+  @override
+  State<_TokoCard> createState() => _TokoCardState();
+}
+
+class _TokoCardState extends State<_TokoCard> {
+  late final TextEditingController _n;
+  late final TextEditingController _a;
+  //late final TextEditingController _k; //untuk kasir
+  bool _editing = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _n = TextEditingController(text: widget.data.namaToko);
+    _a = TextEditingController(text: widget.data.alamat);
+    //_k = TextEditingController(text: widget.data.namaKasir); //punya kasir supaya ga tampil di add toko
+    if (!widget.data.isEmpty) _editing = false;
+  }
+
+  @override
+  void dispose() {
+    _n.dispose(); _a.dispose(); // _k.dispose(); //kasir
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,56 +121,67 @@ class _TokoCard extends StatelessWidget {
         color: Colors.white,
         border: Border.all(color: AppTheme.border, width: 1),
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(
-            color: AppTheme.shadowLight,
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: AppTheme.shadowLight, blurRadius: 6, offset: Offset(0, 3))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Nama Toko:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text(namaToko, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
-          const SizedBox(height: 8),
-          Text('Alamat:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text(alamat, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Nama Kasir:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(kasir, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
-                ],
-              ),
-              ElevatedButton(
-                onPressed: onEdit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryRed,
-                  foregroundColor: Colors.white,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  textStyle: t.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          IconButton(
+            tooltip: 'Hapus',
+            onPressed: widget.onDelete,
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+          ),
+        ]),
+        Text('Nama Toko:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 2),
+        _editing ? TextField(controller: _n, decoration: const InputDecoration(hintText: 'Masukkan nama toko'))
+            : Text(_n.text.isEmpty ? '—' : _n.text, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
+        const SizedBox(height: 8),
+        Text('Alamat:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 2),
+        _editing ? TextField(controller: _a, decoration: const InputDecoration(hintText: 'Masukkan alamat'))
+            : Text(_a.text.isEmpty ? '—' : _a.text, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
+        const SizedBox(height: 8),
+        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nama Kasir:',
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                child: const Text('Edit'),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '-', // selalu tampil "-" (tidak bisa diubah)
+                        style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () {
+              if (_editing) {
+                widget.onSave(widget.data.copyWith(namaToko: _n.text, alamat: _a.text, namaKasir: "-"));
+              }
+              setState(() => _editing = !_editing);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _editing ? AppTheme.primaryOrange : AppTheme.primaryRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(_editing ? 'Simpan' : 'Edit'),
+          ),
+        ]),
+      ]),
     );
   }
 }
