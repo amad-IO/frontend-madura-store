@@ -324,8 +324,8 @@ class _LaporanPenjualanPageState extends State<LaporanPenjualanPage> {
               // TODO: export/print laporan
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent, // ⬅️ transparan agar gradient terlihat
-              shadowColor: Colors.transparent,      // ⬅️ hilangkan shadow bawaan
+              backgroundColor: Colors.transparent, // transparan
+              shadowColor: Colors.transparent,      // hilangkan shadow bawaan
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
