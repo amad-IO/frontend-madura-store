@@ -114,7 +114,8 @@ class DashboardPage extends StatelessWidget {
                                   showHamburgerMenu(
                                     context,
                                     onLaporan: () {
-                                      // TODO: navigasi ke halaman laporan
+                                      Navigator.pop(context);
+                                      Navigator.pushNamed(context, AppRoutes.laporanPenjualan);
                                     },
                                     onTambahToko: () {
                                       Navigator.pop(context); // tutup menu

@@ -8,6 +8,9 @@ import '../ui/pages/ForgotPasswordPage.dart';
 import '../ui/pages/forgotOTP.dart';        // pastikan file & class: ForgotOTPPage
 import '../ui/pages/dashboardPage.dart';
 import '../ui/pages/TambahToko.dart';       // pastikan class: TambahToko
+import '../ui/pages/laporanPenjualan.dart';
+
+
 
 class AppRoutes {
   // route names
@@ -18,6 +21,7 @@ class AppRoutes {
   static const String forgotOTP  = '/forgot-otp';   // <-- TAMBAHKAN INI
   static const String dashboard  = '/dashboard';
   static const String tambahToko = '/tambah-toko';  // <-- lowerCamelCase
+  static const String laporanPenjualan = '/laporanPenjualan';
 
   // halaman pertama
   static const String initial = onBoarding;
@@ -31,5 +35,6 @@ class AppRoutes {
     forgotOTP: (_)  => const ForgotOTPPage(),   // <-- sekarang terdefinisi
     dashboard: (_)  => const DashboardPage(),
     tambahToko: (_) => const TambahToko(),    // <-- sesuaikan nama class
+    laporanPenjualan: (_) => const LaporanPenjualanPage(),
   };
 }
