@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../core/app_routes.dart';
 
 
 final r = BorderRadius.circular(30);
@@ -103,34 +105,39 @@ class _LaporanPenjualanPageState extends State<LaporanPenjualanPage> {
                 children: [
                   // Back + Judul
                   SizedBox(
-                    height: 64,
+                    height: 80, // sedikit lebih tinggi supaya judul muat di bawah back
                     child: Stack(
                       children: [
+                        // 🔹 Tombol Back (pojok kiri atas)
                         Positioned(
                           left: 8,
                           top: 8,
                           child: IconButton(
-                            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                                color: AppTheme.primaryCream),
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: AppTheme.primaryCream,
+                            ),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ),
+
+                        // 🔹 Judul (tengah bawah)
                         Align(
-                          alignment: Alignment.center,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 12),
+                          alignment: Alignment.bottomCenter,
                             child: Text(
                               'Laporan Penjualan',
-                              style: t.titleLarge?.copyWith(
-                                color: Colors.white,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.primaryCream,
+                                fontSize: 25,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                          ),
                         ),
                       ],
                     ),
                   ),
+
                   const Spacer(),
                   // ====== SEARCH KECIL DI TENGAH BAWAH ======
               Align(
