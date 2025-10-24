@@ -126,7 +126,8 @@ class DashboardPage extends StatelessWidget {
                                       Navigator.pushNamed(context, AppRoutes.editProduk);
                                     },
                                     onTambahPengguna: () {
-                                      // TODO: navigasi ke halaman edit produk
+                                      Navigator.pop(context);
+                                      Navigator.pushNamed(context, AppRoutes.tambahPengguna);
                                     },
                                     onLogout: () => handleLogout(context),
                                   );

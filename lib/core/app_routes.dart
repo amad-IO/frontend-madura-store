@@ -11,6 +11,7 @@ import '../ui/pages/TambahToko.dart';
 import '../ui/pages/laporanPenjualan.dart';
 import '../ui/pages/editProdukPage.dart';
 import '../data/models/product.dart';
+import '../ui/pages/tambahPenggunaPage.dart';
 
 class AppRoutes {
   // route names
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String tambahToko = '/tambah-toko';
   static const String laporanPenjualan = '/laporan-penjualan';
   static const String editProduk = '/edit-produk';
+  static const String tambahPengguna    = '/tambah-pengguna';
 
   // halaman pertama
   static const String initial = onBoarding;
@@ -38,7 +40,7 @@ class AppRoutes {
     tambahToko: (_) => const TambahToko(),
     laporanPenjualan: (_) => const LaporanPenjualanPage(),
     editProduk: (_) => const EditProdukPage(),
-
+    tambahPengguna:     (_) => const TambahPenggunaPage(),
 
 
 
