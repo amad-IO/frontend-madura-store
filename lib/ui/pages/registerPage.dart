@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_theme.dart';
 import '../../core/app_routes.dart';
+import '../../data/services/signup_service.dart'; // ✅ ganti ke SignupService
+import '../../data/models/signup_request.dart';
+import '../../data/models/signup_response.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,7 +18,11 @@ class _RegisterPageState extends State<RegisterPage> {
   final _username = TextEditingController();
   final _phone = TextEditingController();
   final _pass = TextEditingController();
+
   bool _obscure = true;
+  bool _isLoading = false;
+
+  final SignupService _signupService = SignupService(); // ✅ service benar
 
   @override
   void dispose() {
@@ -25,7 +32,8 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  // ===== Validator sama dengan LoginPage =====
+  // ================= VALIDASI INPUT =================
+
   String? _vUsername(String? v) {
     final x = v?.trim() ?? '';
     if (x.isEmpty) return 'Username tidak boleh kosong';
@@ -38,9 +46,13 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   String? _vPhone(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Nomor handphone tidak boleh kosong';
+    if (v == null || v.trim().isEmpty) {
+      return 'Nomor handphone tidak boleh kosong';
+    }
     final re = RegExp(r'^(?:\+62|0)[0-9]{9,13}$');
-    if (!re.hasMatch(v.trim())) return 'Nomor tidak valid (contoh: 08xxxxxxxxxx)';
+    if (!re.hasMatch(v.trim())) {
+      return 'Nomor tidak valid (contoh: 08xxxxxxxxxx)';
+    }
     return null;
   }
 
@@ -50,7 +62,8 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
-  // ===== InputDecoration seperti di LoginPage =====
+  // ================= DEKORASI INPUT =================
+
   OutlineInputBorder _rounded(Color c) => OutlineInputBorder(
     borderRadius: BorderRadius.circular(15),
     borderSide: BorderSide(color: c, width: 1),
@@ -78,23 +91,44 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  void _submit() {
+  // ================== SUBMIT (DAFTAR) ==================
+  Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Register success (dummy)',
-          style: GoogleFonts.poppins(color: Colors.white),
-        ),
-        backgroundColor: AppTheme.primaryRed,
-      ),
+    setState(() => _isLoading = true);
+
+    final request = SignupRequest(
+      username: _username.text.trim(),
+      password: _pass.text.trim(),
+      phone: _phone.text.trim(),
     );
 
-    Navigator.pop(context);
+    try {
+      final SignupResponse response = await _signupService.signup(request); // ✅ panggil service
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // ✅ Setelah berhasil daftar, arahkan ke login
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pendaftaran gagal: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
+  // ================== BUILD UI ==================
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -110,7 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
         bottom: false,
         child: Stack(
           children: [
-            // ===== HEADER MERAH =====
+            // Background merah gradient
             Container(
               height: topH,
               decoration: BoxDecoration(
@@ -129,7 +163,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
 
-            // ===== PANEL PINK + LOGO =====
+            // Logo dan Judul
             Positioned(
               top: 64,
               left: 20,
@@ -158,7 +192,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         Positioned(
                           top: logoW,
                           child: Text(
-                            'Kasir madura',
+                            'Kasir Madura',
                             style: GoogleFonts.poppins(
                               color: AppTheme.primaryRed,
                               fontSize: 20,
@@ -173,7 +207,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
 
-            // ===== PANEL FORM =====
+            // FORM REGISTER
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
@@ -192,179 +226,171 @@ class _RegisterPageState extends State<RegisterPage> {
                     24,
                     36 + MediaQuery.of(context).viewInsets.bottom,
                   ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: Form(
-                      key: _formKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Text(
-                              'Register',
-                              style: GoogleFonts.poppins(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w700,
-                                height: 1.0,
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Text(
+                            'Register',
+                            style: GoogleFonts.poppins(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Username
+                        Text(
+                          'Username',
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _username,
+                          keyboardType: TextInputType.text,
+                          textInputAction: TextInputAction.next,
+                          decoration: _dec(
+                            hint: 'Enter your username',
+                            icon: Icons.person_outline_rounded,
+                            iconColor: AppTheme.textPrimary,
+                            fieldFill: cs.surface,
+                          ),
+                          validator: _vUsername,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Phone
+                        Text(
+                          'Nomor Handphone',
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _phone,
+                          keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.next,
+                          decoration: _dec(
+                            hint: 'Enter your number',
+                            icon: Icons.phone_outlined,
+                            iconColor: AppTheme.textPrimary,
+                            fieldFill: cs.surface,
+                          ),
+                          validator: _vPhone,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Password
+                        Text(
+                          'Password',
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _pass,
+                          obscureText: _obscure,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
+                          decoration: _dec(
+                            hint: 'Enter your password',
+                            icon: Icons.lock_outline_rounded,
+                            iconColor: AppTheme.textPrimary,
+                            suffix: IconButton(
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: AppTheme.textPrimary,
                               ),
                             ),
+                            fieldFill: cs.surface,
                           ),
-                          const SizedBox(height: 28),
+                          validator: _vPass,
+                        ),
 
-                          // Username
-                          Text(
-                            'Username',
-                            style: text.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _username,
-                            keyboardType: TextInputType.text,
-                            textInputAction: TextInputAction.next,
-                            decoration: _dec(
-                              hint: 'Enter your username',
-                              icon: Icons.person_outline_rounded,
-                              iconColor: AppTheme.textPrimary,
-                              fieldFill: cs.surface,
-                            ),
-                            validator: _vUsername,
-                          ),
-                          const SizedBox(height: 20),
+                        const SizedBox(height: 28),
 
-                          // Phone
-                          Text(
-                            'Nomor Handphone',
-                            style: text.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _phone,
-                            keyboardType: TextInputType.phone,
-                            textInputAction: TextInputAction.next,
-                            decoration: _dec(
-                              hint: 'Enter your number',
-                              icon: Icons.phone_outlined,
-                              iconColor: AppTheme.textPrimary,
-                              fieldFill: cs.surface,
-                            ),
-                            validator: _vPhone,
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Password
-                          Text(
-                            'Password',
-                            style: text.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _pass,
-                            obscureText: _obscure,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _submit(),
-                            decoration: _dec(
-                              hint: 'Enter your password',
-                              icon: Icons.lock_outline_rounded,
-                              iconColor: AppTheme.textPrimary,
-                              fieldFill: cs.surface,
-                              suffix: IconButton(
-                                onPressed: () => setState(() => _obscure = !_obscure),
-                                icon: Icon(
-                                  _obscure ? Icons.visibility_off : Icons.visibility,
-                                  color: AppTheme.textPrimary,
-                                ),
+                        // Tombol Register
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _isLoading
+                                  ? Colors.grey
+                                  : AppTheme.primaryRed,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
                               ),
                             ),
-                            validator: _vPass,
+                            child: _isLoading
+                                ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                                : Text(
+                              'Next',
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryWhite,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 28),
+                        ),
 
-                          // ===== Tombol NEXT =====
-                          Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 300),
-                              child: SizedBox(
-                                width: double.infinity,
-                                height: 56,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(24),
-                                  child: DecoratedBox(
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment(-1.0, -0.05),
-                                        end: Alignment(1.0, 0.05),
-                                        colors: [
-                                          AppTheme.primaryOrange,
-                                          AppTheme.primaryRed
-                                        ],
-                                      ),
-                                    ),
-                                    child: ElevatedButton(
-                                      onPressed: _submit,
-                                      style: ElevatedButton.styleFrom(
-                                        elevation: 0,
-                                        backgroundColor: Colors.transparent,
-                                        shadowColor: Colors.transparent,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(Radius.circular(24)),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Next',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.primaryWhite,
-                                        ),
-                                      ),
+                        const SizedBox(height: 16),
+
+                        // Link ke Login
+                        Center(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 6,
+                            children: [
+                              Text(
+                                "Have an account?",
+                                style: text.bodyMedium
+                                    ?.copyWith(color: cs.onSurface),
+                              ),
+                              InkWell(
+                                onTap: () => Navigator.pushReplacementNamed(
+                                    context, AppRoutes.login),
+                                borderRadius: BorderRadius.circular(6),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 2, vertical: 4),
+                                  child: Text(
+                                    "Sign In",
+                                    style: text.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.primary,
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-
-                          // ===== Already have account =====
-                          Center(
-                            child: Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 6,
-                              children: [
-                                Text(
-                                  "Have an account?",
-                                  style: text.bodyMedium?.copyWith(color: cs.onSurface),
-                                ),
-                                InkWell(
-                                  onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.login),
-                                  borderRadius: BorderRadius.circular(6),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                                    child: Text(
-                                      "Sign In",
-                                      style: text.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: cs.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                   ),
                 ),

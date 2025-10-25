@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_routes.dart';
 import '../../core/app_theme.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../data/models/login_request.dart';
+import '../../data/models/login_response.dart';
+import '../../data/services/auth_service.dart';
 import '../../ui/pages/dashboardPage.dart';
 import '../../ui/pages/ForgotPasswordPage.dart';
-
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,8 +17,11 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _username = TextEditingController();
-  final _pass  = TextEditingController();
+  final _pass = TextEditingController();
   bool _obscure = true;
+  bool _isLoading = false;
+
+  final AuthService _authService = AuthService();
 
   OutlineInputBorder _rounded(Color c) => OutlineInputBorder(
     borderRadius: BorderRadius.circular(15),
@@ -40,22 +44,15 @@ class _LoginPageState extends State<LoginPage> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       border: _rounded(Colors.transparent),
       enabledBorder: _rounded(Colors.transparent),
-      focusedBorder: _rounded(Colors.transparent), // tidak pakai warna brand saat fokus
+      focusedBorder: _rounded(Colors.transparent),
       errorBorder: _rounded(AppTheme.error),
       focusedErrorBorder: _rounded(AppTheme.error),
     );
   }
 
-
   String? _vUsername(String? v) {
     final x = v?.trim() ?? '';
     if (x.isEmpty) return 'Username tidak boleh kosong';
-
-    // aturan username:
-    // - 3–20 karakter
-    // - huruf, angka, titik (.), underscore (_), atau minus (-)
-    // - tidak boleh mulai/akhir dengan . _ -
-    // - tidak boleh ada dua simbol khusus berurutan (.. __ -- ._ _- dsb)
     final re = RegExp(r'^(?=.{3,20}$)(?![._-])(?!.*[._-]{2})[a-zA-Z0-9._-]+(?<![._-])$');
     if (!re.hasMatch(x)) {
       return 'Gunakan 3–20 karakter: huruf/angka . _ - (tidak boleh diawali/diakhiri simbol)';
@@ -63,55 +60,82 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
-
-
-  String? _vPass(String? v){
-    if(v==null||v.isEmpty) return 'Password tidak boleh kosong';
-    if(v.length<6) return 'Minimal 6 karakter';
+  String? _vPass(String? v) {
+    if (v == null || v.isEmpty) return 'Password tidak boleh kosong';
+    if (v.length < 6) return 'Minimal 6 karakter';
     return null;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
 
-    final username = _username.text.trim(); // <- gunakan ini bila perlu
+    setState(() => _isLoading = true);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const DashboardPage()),
+    final request = LoginRequest(
+      username: _username.text.trim(),
+      password: _pass.text.trim(),
     );
+
+    try {
+      final LoginResponse response = await _authService.login(request);
+
+      if (response.token != null && response.token!.isNotEmpty) {
+        // Login sukses
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login berhasil!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardPage()),
+        );
+      } else {
+        // Login gagal (token kosong)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Username atau password salah.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal login: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-
-  // void _submit(){
-  //   if(!(_formKey.currentState?.validate()??false)) return;
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text('Login sukses (simulasi)')),
-  //   );
-  //   // TODO: auth & navigate (Navigator.pushReplacementNamed(context, AppRoutes.home);)
-  // }
-
-    @override
-    void dispose() { _username.dispose(); _pass.dispose(); super.dispose(); }
+  @override
+  void dispose() {
+    _username.dispose();
+    _pass.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cs   = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final size = MediaQuery.of(context).size;
 
-    final topH  = size.height * 0.42;
-    const logoW = 146.0;
+    final topH = size.height * 0.42;
 
     return Scaffold(
-      // header pakai primaryRed
       backgroundColor: AppTheme.primaryRed,
       body: SafeArea(
         bottom: false,
         child: Stack(
           children: [
-            // ===== HEADER MERAH ROUNDED =====
+            // ===== HEADER MERAH =====
             Container(
               height: topH,
               decoration: BoxDecoration(
@@ -120,7 +144,6 @@ class _LoginPageState extends State<LoginPage> {
                   end: Alignment.bottomRight,
                   colors: [
                     AppTheme.primaryRed,
-                    // “red dark” dibuat dari palet yang sama (lebih pekat)
                     AppTheme.primaryRed.withOpacity(0.95),
                   ],
                 ),
@@ -131,11 +154,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // Panel pink semi-transparan + logo + title
-            // Panel pink semi-transparan + logo + title (390 x 314)
+            // ===== PANEL LOGO =====
             Positioned(
-              top: 64,           // atur jarak dari atas header merah (sesuaikan 56–80)
-              left: 20,          // 430 - (20+20) = 390
+              top: 64,
+              left: 20,
               right: 20,
               child: SizedBox(
                 height: 314,
@@ -147,9 +169,8 @@ class _LoginPageState extends State<LoginPage> {
                     child: Stack(
                       alignment: Alignment.topCenter,
                       children: [
-                        // LOGO — dinaikkan beberapa pixel (atur nilai top sesuai selera)
                         const Positioned(
-                          top: 0, // makin kecil = makin naik (coba 0–12)
+                          top: 0,
                           child: SizedBox(
                             width: 146,
                             height: 146,
@@ -159,38 +180,32 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-
-                        // TEKS — tepat di bawah logo
                         Positioned(
-                          top: 146, // atur sesuai kebutuhan
+                          top: 146,
                           child: Text(
                             'Kasir madura',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               color: AppTheme.primaryRed,
                               fontSize: 20,
-                              fontWeight: FontWeight.w700, // lebih tebal (Bold)
-                              letterSpacing: 0,
-                              height: 1.0,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ],
                     ),
-
                   ),
                 ),
               ),
             ),
 
-
-            // ===== PANEL KREM BESAR (CONTENT) =====
+            // ===== PANEL KREM (FORM LOGIN) =====
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: AppTheme.primaryCream, // dari palette
+                  color: AppTheme.primaryCream,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(38),
                     topRight: Radius.circular(38),
@@ -198,183 +213,167 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 36),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: Center(
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // TITLE "Sign In"
-                            Center(
-                              child: Text(
-                                'Sign In',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 32,                 // samakan dengan Figma (ubah jika perlu)
-                                  fontWeight: FontWeight.w700,  // BLACK (lebih tebal dari w800)
-                                  height: 1.0,                  // line-height rapat seperti “Auto”
-                                  letterSpacing: 0,             // 0% tracking
-                                  color: Theme.of(context).colorScheme.onSurface, // hitam/teks utama
-                                ),
-                              ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Text(
+                            'Sign In',
+                            style: GoogleFonts.poppins(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                              height: 1.0,
+                              color: cs.onSurface,
                             ),
-                            const SizedBox(height: 28),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
 
-                            // Label username
-                            Text(
-                              'Username',
-                              style: text.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
+                        Text(
+                          'Username',
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _username,
+                          decoration: _dec(
+                            hint: 'Enter your Username',
+                            icon: Icons.person_outline_rounded,
+                            iconColor: AppTheme.textPrimary,
+                            fieldFill: cs.surface,
+                          ),
+                          validator: _vUsername,
+                        ),
+                        const SizedBox(height: 20),
+
+                        Text(
+                          'Password',
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _pass,
+                          obscureText: _obscure,
+                          onFieldSubmitted: (_) => _submit(),
+                          decoration: _dec(
+                            hint: 'Enter your password',
+                            icon: Icons.lock_outline_rounded,
+                            iconColor: AppTheme.textPrimary,
+                            fieldFill: cs.surface,
+                            suffix: IconButton(
+                              onPressed: () => setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure ? Icons.visibility_off : Icons.visibility,
                                 color: AppTheme.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                          ),
+                          validator: _vPass,
+                        ),
+                        const SizedBox(height: 10),
 
-                            // Field Email
-                            TextFormField(
-                              controller: _username,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              decoration: _dec(
-                                hint: 'Enter your Username',
-                                icon: Icons.person_outline_rounded,
-                                iconColor: AppTheme.textPrimary,
-                                fieldFill: cs.surface, // putih dari theme
-                              ),
-                              validator: _vUsername,
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Label Password
-                            Text(
-                              'Password',
-                              style: text.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => Navigator.pushNamed(context, AppRoutes.forgot),
+                            child: Text(
+                              'Forgot your password?',
+                              style: text.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryRed,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
 
-                            // Field Password + eye
-                            TextFormField(
-                              controller: _pass,
-                              obscureText: _obscure,
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _submit(),
-                              decoration: _dec(
-                                hint: 'Enter your password',
-                                icon: Icons.lock_outline_rounded,
-                                iconColor: AppTheme.textPrimary,
-                                fieldFill: cs.surface,
-                                suffix: IconButton(
-                                  onPressed: ()=> setState(()=> _obscure = !_obscure),
-                                  icon: Icon(
-                                    _obscure ? Icons.visibility_off : Icons.visibility,
-                                    color: AppTheme.textPrimary,
+                        // ===== TOMBOL LOGIN =====
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 300),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment(-1.0, -0.05),
+                                    end: Alignment(1.0, 0.05),
+                                    colors: [
+                                      AppTheme.primaryOrange,
+                                      AppTheme.primaryRed
+                                    ],
                                   ),
-                                  tooltip: _obscure ? 'Show password' : 'Hide password',
+                                  borderRadius: BorderRadius.circular(24),
                                 ),
-                              ),
-                              validator: _vPass,
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            // Forgot
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () => Navigator.pushNamed(context, AppRoutes.forgot),
-                                child: Text(
-                                  'Forgot your ?',
-                                  style: text.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.primaryRed,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-
-                            const SizedBox(height: 12),
-
-                            // TOMBOL LOGIN (gradient, pill) — gradient pakai palette
-                            Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 300), // ubah 260–320 sesuai selera
-                                child: SizedBox(
-                                  width: double.infinity, // biar mengisi sampai maxWidth di atas
-                                  height: 56,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        begin: Alignment(-1.0, -0.05),
-                                        end: Alignment(1.0, 0.05),
-                                        colors: [AppTheme.primaryOrange, AppTheme.primaryRed],
-                                      ),
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _submit,
+                                  style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(24),
                                     ),
-                                    child: ElevatedButton(
-                                      onPressed: _submit,
-                                      style: ElevatedButton.styleFrom(
-                                        elevation: 0,
-                                        backgroundColor: Colors.transparent,
-                                        shadowColor: Colors.transparent,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                      ),
-                                      child: Text(
-                                        'Login',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 20, fontWeight: FontWeight.w600,
-                                          height: 1.2, color: AppTheme.primaryWhite,
-                                        ),
-                                      ),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                  ),
+                                  child: _isLoading
+                                      ? const CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  )
+                                      : Text(
+                                    'Login',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.primaryWhite,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
 
-                            const SizedBox(height: 20),
-
-                            // Signup text
-                            Center(
-                              child: Wrap(
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 6,
-                                children: [
-                                  Text(
-                                    "Don’t have an account?",
-                                    style: text.bodyMedium?.copyWith(color: cs.onSurface),
-                                  ),
-                                  InkWell(
-                                    onTap: () => Navigator.pushNamed(context, AppRoutes.register),
-                                    // kalau mau replace (tidak bisa back):
-                                    // onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.register),
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                                      child: Text(
-                                        "Sign Up",
-                                        style: text.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: cs.primary,
-                                        ),
-                                      ),
+                        // ===== SIGNUP TEXT =====
+                        Center(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 6,
+                            children: [
+                              Text(
+                                "Don’t have an account?",
+                                style: text.bodyMedium?.copyWith(color: cs.onSurface),
+                              ),
+                              InkWell(
+                                onTap: () => Navigator.pushNamed(context, AppRoutes.register),
+                                borderRadius: BorderRadius.circular(6),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                                  child: Text(
+                                    "Sign Up",
+                                    style: text.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.primary,
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-
-                            const SizedBox(height: 8),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
