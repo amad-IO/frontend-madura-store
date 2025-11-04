@@ -27,7 +27,7 @@ class ApiConfig {
     // Jika tidak diisi, fallback otomatis.
     if (Platform.isAndroid) {
       // Default untuk emulator Android
-      return 'http://10.0.2.2:8080';
+      return 'http://localhost:8080';
     } else if (Platform.isIOS) {
       // Untuk iOS simulator
       return 'http://localhost:8080';

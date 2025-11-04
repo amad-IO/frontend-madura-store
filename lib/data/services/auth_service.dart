@@ -5,7 +5,7 @@ import '../models/login_request.dart';
 import '../models/login_response.dart';
 
 class AuthService {
-  final String baseUrl = "http://10.0.2.2:8080/api";
+  final String baseUrl = "http://localhost:8080/api";
 
   Future<LoginResponse> login(LoginRequest request) async {
     final url = Uri.parse('$baseUrl/login');
