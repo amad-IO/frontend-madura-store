@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_theme.dart';
 import '../../data/models/toko.dart';
+import '../../data/models/tambah_pengguna_request.dart';
+import '../../data/services/tambah_pengguna_service.dart';
 import '../../state/toko_controller.dart';
 
 class TambahPenggunaPage extends StatelessWidget {
@@ -13,8 +15,7 @@ class TambahPenggunaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      // Sementara pakai mock seperti TambahToko; nanti ganti ke sumber data asli (HTTP, dsb.)
-      create: (_) => TokoController.mock()..load(),
+      create: (_) => TokoController.http()..load(), // pakai data dari backend
       child: const _TambahPenggunaView(),
     );
   }
@@ -26,7 +27,6 @@ class _TambahPenggunaView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<TokoController>();
-    final t = Theme.of(context).textTheme;
 
     return Scaffold(
       backgroundColor: AppTheme.primaryCream,
@@ -44,7 +44,6 @@ class _TambahPenggunaView extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Back
                     Positioned(
                       left: 8,
                       top: 8,
@@ -57,7 +56,6 @@ class _TambahPenggunaView extends StatelessWidget {
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
-                    // Title
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -70,7 +68,6 @@ class _TambahPenggunaView extends StatelessWidget {
                         Text(
                           'Tambah Pengguna',
                           textAlign: TextAlign.center,
-                          // Menyamakan gaya dengan TambahToko
                           style: GoogleFonts.poppins(
                             color: AppTheme.primaryCream,
                             fontSize: 30,
@@ -86,7 +83,6 @@ class _TambahPenggunaView extends StatelessWidget {
           ),
         ),
       ),
-
       body: c.loading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -97,9 +93,31 @@ class _TambahPenggunaView extends StatelessWidget {
           return _PenggunaCard(
             key: ValueKey(toko.id ?? i),
             data: toko,
-            // Hanya izinkan berubahnya 'namaKasir'
-            onSave: (kasirBaru) {
-              c.saveAt(i, toko.copyWith(namaKasir: kasirBaru));
+            onSave: (kasirBaru) async {
+              // 🔹 Panggil service untuk menyimpan data ke backend
+              final req = TambahPenggunaRequest(
+                namaKasir: kasirBaru,
+                namaToko: toko.namaToko ?? '',
+                alamat: toko.alamat ?? '',
+                nama: '',
+                username: '',
+                password: '',
+                phone: '',
+              );
+
+              final success = await TambahPenggunaService().tambahPengguna(req);
+
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Kasir berhasil ditambahkan!')),
+                );
+                // Update list toko dengan nama kasir baru
+                c.saveAt(i, toko.copyWith(namaKasir: kasirBaru));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Gagal menambahkan kasir')),
+                );
+              }
             },
           );
         },
@@ -108,9 +126,6 @@ class _TambahPenggunaView extends StatelessWidget {
   }
 }
 
-/// Card untuk mengisi/ubah nama kasir.
-/// - Nama Toko & Alamat: hanya tampil (read-only)
-/// - Nama Kasir: bisa diubah
 class _PenggunaCard extends StatefulWidget {
   final Toko data;
   final ValueChanged<String> onSave;
@@ -133,7 +148,6 @@ class _PenggunaCardState extends State<_PenggunaCard> {
   void initState() {
     super.initState();
     _kasirC = TextEditingController(text: _normalizeKasir(widget.data.namaKasir));
-    // Jika kasir sudah terisi “bener”, default non-editing
     if (_kasirC.text.trim().isNotEmpty && _kasirC.text.trim() != '-') {
       _editing = false;
     }
@@ -168,7 +182,6 @@ class _PenggunaCardState extends State<_PenggunaCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Baris judul toko (nama toko)
           Text('Nama Toko:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
           Text(
@@ -176,8 +189,6 @@ class _PenggunaCardState extends State<_PenggunaCard> {
             style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
           ),
           const SizedBox(height: 8),
-
-          // Alamat (read-only)
           Text('Alamat:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
           Text(
@@ -185,32 +196,24 @@ class _PenggunaCardState extends State<_PenggunaCard> {
             style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
           ),
           const SizedBox(height: 12),
-
-          // Nama Kasir (editable)
           Text('Nama Kasir:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
           _editing
               ? TextField(
             controller: _kasirC,
-            decoration: const InputDecoration(
-              hintText: 'Masukkan nama kasir',
-            ),
+            decoration: const InputDecoration(hintText: 'Masukkan nama kasir'),
           )
               : Text(
             _kasirC.text.trim().isEmpty ? '—' : _kasirC.text.trim(),
             style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
           ),
-
           const SizedBox(height: 14),
-
-          // Tombol Simpan/Edit
           Align(
             alignment: Alignment.centerRight,
             child: OutlinedButton(
               onPressed: () {
                 if (_editing) {
                   final val = _kasirC.text.trim();
-                  // Biarkan kosong sebagai "-" saat disimpan
                   widget.onSave(val.isEmpty ? '-' : val);
                 }
                 setState(() => _editing = !_editing);

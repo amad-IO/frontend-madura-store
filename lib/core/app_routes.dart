@@ -35,7 +35,7 @@ class AppRoutes {
     login: (_) => const LoginPage(),
     register: (_) => const RegisterPage(),
     forgot: (_) => const ForgotPasswordPage(),
-    forgotOTP: (_) => const ForgotOTPPage(),
+    forgotOTP: (_) => ForgotOTPPage(),
     dashboard: (_) => const DashboardPage(),
     tambahToko: (_) => const TambahToko(),
     laporanPenjualan: (_) => const LaporanPenjualanPage(),

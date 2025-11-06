@@ -16,18 +16,16 @@ class AuthService {
     );
 
     try {
-      // Coba parse JSON dulu
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
+        await prefs.setString('jwt_token', data['token']);
         await prefs.setString('role', data['role']);
         await prefs.setString('username', request.username);
 
         return LoginResponse.fromJson(data);
       } else {
-        // Jika backend kirim JSON error
         return LoginResponse(
           token: '',
           role: '',
@@ -35,13 +33,10 @@ class AuthService {
         );
       }
     } catch (e) {
-      // Jika backend kirim plain text (bukan JSON)
       return LoginResponse(
         token: '',
         role: '',
-        message: response.body.toString().isNotEmpty
-            ? response.body.toString()
-            : 'Login gagal, format tidak dikenal',
+        message: response.body.isNotEmpty ? response.body : 'Login gagal, format tidak dikenal',
       );
     }
   }

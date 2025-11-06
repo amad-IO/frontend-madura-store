@@ -1,4 +1,3 @@
-// lib/ui/pages/editProdukPage.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,14 +25,12 @@ class _EditProdukPageState extends State<EditProdukPage> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<ProductController>(
-      // Provider dibuat DI SINI, jadi jangan pakai context.read di luar/ sebelum build.
-      create: (_) => ProductController(),
+      create: (_) => ProductController()..fetchProduk(), // ✅ langsung load produk dari backend
       child: Scaffold(
         backgroundColor: AppTheme.primaryCream,
         body: SafeArea(
           child: Column(
             children: [
-              // ===== HEADER GRADIENT + SEARCH =====
               _HeaderArea(
                 title: 'Produk',
                 searchController: _searchC,
@@ -41,7 +38,6 @@ class _EditProdukPageState extends State<EditProdukPage> {
                 onChanged: (q) => setState(() => _query = q.trim().toLowerCase()),
               ),
 
-              // ===== TABEL LIST =====
               Expanded(
                 child: Consumer<ProductController>(
                   builder: (context, ctrl, _) {
@@ -55,7 +51,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
                     }).toList();
 
                     if (items.isEmpty) {
-                      return _EmptyState(onRefresh: () {});
+                      return _EmptyState(onRefresh: ctrl.fetchProduk);
                     }
 
                     return Column(
@@ -85,7 +81,6 @@ class _EditProdukPageState extends State<EditProdukPage> {
                 ),
               ),
 
-              // ===== TOMBOL TAMBAH =====
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                 child: _PrimaryGradientButton(
@@ -100,11 +95,10 @@ class _EditProdukPageState extends State<EditProdukPage> {
     );
   }
 
-  /// Form tambah/edit produk (bottom sheet)
   void _openFormProduk(BuildContext context, {Product? product}) {
     final isEdit = product != null;
 
-    final nameC  = TextEditingController(text: product?.name ?? '');
+    final nameC = TextEditingController(text: product?.name ?? '');
     final priceC = TextEditingController(text: product?.price.toString() ?? '');
     final stockC = TextEditingController(text: product?.stock.toString() ?? '');
 
@@ -182,46 +176,47 @@ class _EditProdukPageState extends State<EditProdukPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        final nama  = nameC.text.trim();
+                      onPressed: () async {
+                        final nama = nameC.text.trim();
                         final harga = int.tryParse(priceC.text.trim()) ?? 0;
-                        final stok  = int.tryParse(stockC.text.trim()) ?? 0;
+                        final stok = int.tryParse(stockC.text.trim()) ?? 0;
                         if (nama.isEmpty) return;
 
                         final ctrl = context.read<ProductController>();
 
                         if (isEdit) {
-                          ctrl.update(Product(
-                            id: product!.id,
+                          final updated = product!.copyWith(
                             name: nama,
                             price: harga,
                             stock: stok,
-                            rating: product.rating,
-                            imageUrl: product.imageUrl,
-                            category: product.category,
-                          ));
+                          );
+
+                          await ctrl.updateProduk(updated); // ✅ sinkron ke backend
                         } else {
-                          final newId = 'p${DateTime.now().millisecondsSinceEpoch}';
-                          ctrl.add(Product(
-                            id: newId,
+                          final newProduct = Product(
+                            id: 0, // backend akan generate ID
                             name: nama,
                             price: harga,
                             stock: stok,
-                            rating: 0,
+                            unit: 'pcs',
                             imageUrl: '',
                             category: '',
-                          ));
+                          );
+
+                          await ctrl.addProduk(newProduct); // ✅ kirim ke backend
                         }
 
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              isEdit ? 'Produk diperbarui' : 'Produk ditambahkan',
-                              style: t.bodyMedium?.copyWith(color: AppTheme.primaryWhite),
+                        if (context.mounted) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isEdit ? 'Produk diperbarui' : 'Produk ditambahkan',
+                                style: t.bodyMedium?.copyWith(color: AppTheme.primaryWhite),
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        }
                       },
                       child: Text(isEdit ? 'Simpan' : 'Tambah'),
                     ),
@@ -240,7 +235,6 @@ class _EditProdukPageState extends State<EditProdukPage> {
   }
 }
 
-/// Header gradient seperti desain: ada tombol back, judul, dan search box.
 class _HeaderArea extends StatelessWidget {
   final String title;
   final TextEditingController searchController;
@@ -270,7 +264,6 @@ class _HeaderArea extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Row back + title center
           Stack(
             alignment: Alignment.center,
             children: [
@@ -292,7 +285,6 @@ class _HeaderArea extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Search box
           TextField(
             controller: searchController,
             onChanged: onChanged,
@@ -307,7 +299,6 @@ class _HeaderArea extends StatelessWidget {
   }
 }
 
-/// Strip header tabel: Produk | Harga | Stok dengan bayangan halus di bawahnya.
 class _TableHeaderStrip extends StatelessWidget {
   const _TableHeaderStrip();
 
@@ -357,14 +348,13 @@ class _TableHeaderStrip extends StatelessWidget {
               style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
-          const SizedBox(width: 44), // ruang untuk tombol Edit
+          const SizedBox(width: 44),
         ],
       ),
     );
   }
 }
 
-/// Baris produk sesuai desain, dengan tombol "Edit" merah di kanan.
 class _ProductRow extends StatelessWidget {
   final Product product;
   final VoidCallback onEdit;
@@ -430,7 +420,6 @@ class _ProductRow extends StatelessWidget {
   }
 }
 
-/// Empty state sederhana.
 class _EmptyState extends StatelessWidget {
   final VoidCallback onRefresh;
 
@@ -461,7 +450,6 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-/// Tombol gradient utama (sesuai desain "Tambah barang")
 class _PrimaryGradientButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;

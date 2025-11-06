@@ -1,28 +1,57 @@
 class Product {
-  final String id;
+  final int id;                // Backend biasanya pakai int untuk ID
   final String name;
   final int price;
-  final int stock;           // ✅ tambahkan
-  final double rating;
-  final String imageUrl;
-  final String? category;
+  final int stock;
+  final String unit;           // Misalnya: pcs, bungkus, botol
+  final String? imageUrl;      // Optional (bisa null)
+  final String? category;      // Optional (kategori produk)
 
   const Product({
     required this.id,
     required this.name,
     required this.price,
-    required this.stock,     // ✅ wajibkan di constructor
-    required this.rating,
-    required this.imageUrl,
+    required this.stock,
+    required this.unit,
+    this.imageUrl,
     this.category,
   });
 
+  /// 🧩 Convert dari JSON (response backend → Flutter model)
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      price: json['price'] ?? 0,
+      stock: json['stock'] ?? 0,
+      unit: json['unit'] ?? '',
+      imageUrl: json['imageUrl'],
+      category: json['category'],
+    );
+  }
+
+  get rating => null;
+
+  /// 🚀 Convert ke JSON (Flutter model → kirim ke backend)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'price': price,
+      'stock': stock,
+      'unit': unit,
+      'imageUrl': imageUrl,
+      'category': category,
+    };
+  }
+
+  /// 🔁 Bikin salinan objek Product (berguna untuk update data)
   Product copyWith({
-    String? id,
+    int? id,
     String? name,
     int? price,
     int? stock,
-    double? rating,
+    String? unit,
     String? imageUrl,
     String? category,
   }) {
@@ -31,9 +60,14 @@ class Product {
       name: name ?? this.name,
       price: price ?? this.price,
       stock: stock ?? this.stock,
-      rating: rating ?? this.rating,
+      unit: unit ?? this.unit,
       imageUrl: imageUrl ?? this.imageUrl,
       category: category ?? this.category,
     );
+  }
+
+  @override
+  String toString() {
+    return 'Product(id: $id, name: $name, price: $price, stock: $stock, unit: $unit)';
   }
 }

@@ -1,9 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_theme.dart';
 import '../../core/app_routes.dart';
-
+import '../../data/models/forgot_password_request.dart';
+import '../../data/models/forgot_password_response.dart';
+import '../../data/services/forgot_password_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -52,36 +53,69 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final x = (v ?? '').trim();
     if (x.isEmpty) return 'Nomor handphone tidak boleh kosong';
     final re = RegExp(r'^(?:\+62|0)[0-9]{9,13}$');
-    if (!re.hasMatch(x)) return 'Nomor tidak valid (contoh: 08xxxxxxxxxx / +628xxxxxxxxx)';
+    if (!re.hasMatch(x)) {
+      return 'Nomor tidak valid (contoh: 08xxxxxxxxxx / +628xxxxxxxxx)';
+    }
     return null;
   }
 
-  void _submit() {
+  // ================= CONNECT BACKEND via SERVICE =================
+  void _submit() async {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    // TODO: call API request OTP pakai _phoneCtrl.text
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppTheme.primaryRed,
-        content: Text('OTP terkirim (simulasi)', style: GoogleFonts.poppins(color: Colors.white)),
-      ),
-    );
+    final phone = _phoneCtrl.text.trim();
+    final req = ForgotPasswordRequest(phone: phone);
 
-    // contoh: lanjut ke halaman OTP kalau sudah ada
-    Navigator.pushNamed(
-      context,
-      AppRoutes.forgotOTP,
-      arguments: _phoneCtrl.text.trim(),
-    );
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.primaryRed.withOpacity(0.9),
+          content: Text(
+            'Mengirim OTP...',
+            style: GoogleFonts.poppins(color: Colors.white),
+          ),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+
+      final ForgotPasswordResponse response =
+      await ForgotPasswordService.sendOtp(req);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            response.message ?? 'OTP berhasil dikirim',
+            style: GoogleFonts.poppins(color: Colors.white),
+          ),
+        ),
+      );
+
+      Navigator.pushNamed(
+        context,
+        AppRoutes.forgotOTP,
+        arguments: phone,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.primaryRed,
+          content: Text(
+            'Gagal mengirim OTP: ${e.toString()}',
+            style: GoogleFonts.poppins(color: Colors.white),
+          ),
+        ),
+      );
+    }
   }
+  // ====================================================
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final size = MediaQuery.of(context).size;
-
     final topH = size.height * 0.42;
 
     return Scaffold(
@@ -97,7 +131,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppTheme.primaryRed, AppTheme.primaryRed.withOpacity(0.95)],
+                  colors: [
+                    AppTheme.primaryRed,
+                    AppTheme.primaryRed.withOpacity(0.95)
+                  ],
                 ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(50),
@@ -124,7 +161,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         const Positioned(
                           top: 0,
                           child: SizedBox(
-                            width: 146, height: 146,
+                            width: 146,
+                            height: 146,
                             child: Image(
                               image: AssetImage('assets/images/logo3.png'),
                               fit: BoxFit.contain,
@@ -154,9 +192,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               alignment: Alignment.bottomCenter,
               child: Container(
                 width: double.infinity,
-                // 💡 tambahkan tinggi minimal biar area krem terlihat lebih tinggi
                 constraints: const BoxConstraints(
-                  minHeight: 531, // sesuai desain Figma kamu
+                  minHeight: 531,
                 ),
                 decoration: const BoxDecoration(
                   color: AppTheme.primaryCream,
@@ -167,7 +204,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 ),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
-                    24, 32, 24, 36 + MediaQuery.of(context).viewInsets.bottom,
+                    24,
+                    32,
+                    24,
+                    36 + MediaQuery.of(context).viewInsets.bottom,
                   ),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 430),
@@ -190,16 +230,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             ),
                           ),
                           const SizedBox(height: 50),
-
                           Text(
-                            'Nomer hanphone', // mengikuti teks di Figma kamu
+                            'Nomer hanphone',
                             style: text.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 8),
-
                           TextFormField(
                             controller: _phoneCtrl,
                             keyboardType: TextInputType.phone,
@@ -213,15 +251,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             ),
                             validator: _vPhone,
                           ),
-
-                          const SizedBox(height:50),
-
-                          // Tombol SEND (gradient sama)
+                          const SizedBox(height: 50),
                           Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 300),
+                              constraints:
+                              const BoxConstraints(maxWidth: 300),
                               child: SizedBox(
-                                width: double.infinity, height: 56,
+                                width: double.infinity,
+                                height: 56,
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(24),
                                   child: DecoratedBox(
@@ -229,7 +266,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       gradient: LinearGradient(
                                         begin: Alignment(-1.0, -0.05),
                                         end: Alignment(1.0, 0.05),
-                                        colors: [AppTheme.primaryOrange, AppTheme.primaryRed],
+                                        colors: [
+                                          AppTheme.primaryOrange,
+                                          AppTheme.primaryRed
+                                        ],
                                       ),
                                     ),
                                     child: ElevatedButton(
@@ -239,7 +279,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                         backgroundColor: Colors.transparent,
                                         shadowColor: Colors.transparent,
                                         shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(Radius.circular(24)),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(24)),
                                         ),
                                       ),
                                       child: Text(
@@ -256,24 +297,28 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 20),
-
-                          // Link Sign Up
                           Center(
                             child: Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
                               spacing: 6,
                               children: [
-                                Text("Don’t have an account?",
-                                  style: text.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                                Text(
+                                  "Don’t have an account?",
+                                  style: text.bodyMedium?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface),
                                 ),
                                 InkWell(
-                                  onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.register),
+                                  onTap: () => Navigator.pushReplacementNamed(
+                                      context, AppRoutes.register),
                                   borderRadius: BorderRadius.circular(6),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                                    child: Text("Sign Up",
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 2, vertical: 4),
+                                    child: Text(
+                                      "Sign Up",
                                       style: text.bodyMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppTheme.primaryRed,

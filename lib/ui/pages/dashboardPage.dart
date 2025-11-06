@@ -114,20 +114,24 @@ class DashboardPage extends StatelessWidget {
                                   showHamburgerMenu(
                                     context,
                                     onLaporan: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushNamed(context, AppRoutes.laporanPenjualan);
+                                      Navigator.of(context, rootNavigator: true).pop();
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pushNamed(AppRoutes.laporanPenjualan);
                                     },
                                     onTambahToko: () {
-                                      Navigator.pop(context); // tutup menu
-                                      Navigator.pushNamed(context, AppRoutes.tambahToko);
+                                      Navigator.of(context, rootNavigator: true).pop();
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pushNamed(AppRoutes.tambahToko);
                                     },
                                     onEditProduk: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushNamed(context, AppRoutes.editProduk);
+                                      Navigator.of(context, rootNavigator: true).pop();
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pushNamed(AppRoutes.editProduk);
                                     },
                                     onTambahPengguna: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushNamed(context, AppRoutes.tambahPengguna);
+                                      Navigator.of(context, rootNavigator: true).pop();
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pushNamed(AppRoutes.tambahPengguna);
                                     },
                                     onLogout: () => handleLogout(context),
                                   );
