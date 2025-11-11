@@ -184,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                         Positioned(
                           top: 146,
                           child: Text(
-                            'Kasir madura',
+                            'Kasir maadura',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               color: AppTheme.primaryRed,
