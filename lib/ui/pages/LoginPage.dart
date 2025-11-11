@@ -7,6 +7,7 @@ import '../../data/models/login_response.dart';
 import '../../data/services/auth_service.dart';
 import '../../ui/pages/dashboardPage.dart';
 import '../../ui/pages/ForgotPasswordPage.dart';
+import '../widgets/button.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -295,55 +296,12 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 12),
 
-                        // ===== TOMBOL LOGIN =====
-                        Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 300),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment(-1.0, -0.05),
-                                    end: Alignment(1.0, 0.05),
-                                    colors: [
-                                      AppTheme.primaryOrange,
-                                      AppTheme.primaryRed
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: _isLoading ? null : _submit,
-                                  style: ElevatedButton.styleFrom(
-                                    elevation: 0,
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                  ),
-                                  child: _isLoading
-                                      ? const CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  )
-                                      : Text(
-                                    'Login',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.primaryWhite,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                        Button(
+                          label: 'Login',
+                          isLoading: _isLoading,
+                          onPressed: _submit,
                         ),
+
                         const SizedBox(height: 20),
 
                         // ===== SIGNUP TEXT =====

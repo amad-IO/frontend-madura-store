@@ -4,61 +4,97 @@ import '../data/services/toko_service.dart';
 
 class TokoController extends ChangeNotifier {
   final TokoService _service;
+
+  /// Konstruktor untuk mode mock (testing lokal)
   TokoController.mock() : _service = TokoServiceMock();
+
+  /// Konstruktor untuk mode http (terhubung ke backend)
   TokoController.http() : _service = TokoServiceHttp();
 
+  // ======================================================
+  // 🔹 STATE
+  // ======================================================
   List<Toko> _items = [];
   List<Toko> get items => _items;
 
   bool _loading = false;
   bool get loading => _loading;
 
+  // ======================================================
+  // 🔹 LOAD DATA DARI SERVICE
+  // ======================================================
   Future<void> load() async {
-    _loading = true; notifyListeners();
-    _items = await _service.fetchAll();
-    _loading = false;
+    _loading = true;
+    notifyListeners();
 
-    if (_items.isEmpty) {
-      _items = [Toko.empty()];
+    try {
+      _items = await _service.fetchAll();
+    } catch (e, st) {
+      debugPrint("Gagal memuat toko: $e");
+      debugPrintStack(stackTrace: st);
+      _items = []; // fallback biar gak error
     }
+
+    _loading = false;
     notifyListeners();
   }
 
-  Future<void> addEmpty() async {
-    final created = await _service.create(Toko.empty());
-    _items = [..._items, Toko.empty()];
-    notifyListeners();
-  }
 
+  // ======================================================
+  // 🔹 SIMPAN ATAU UPDATE DATA DI INDEX TERTENTU
+  // ======================================================
   Future<void> saveAt(int index, Toko data) async {
     if (data.id == null) {
-      // Placeholder → buat ke server lalu GANTI item di index tsb
+      // Jika belum punya ID → buat baru di server lalu gantikan data di list
       final created = await _service.create(data);
       _items[index] = created;
     } else {
-      // Sudah ada id → update
+      // Jika sudah punya ID → update data
       final updated = await _service.update(data);
       _items[index] = updated;
     }
+
     notifyListeners();
   }
 
+  // ======================================================
+  // 🔹 TAMBAH TOKO BARU (untuk popup tambah toko)
+  // ======================================================
+  Future<void> addItem(Toko data) async {
+    // Buat data baru via service
+    final created = await _service.create(data);
 
-  /// Hapus berdasarkan index (termasuk kartu kosong)
+    // Tambahkan ke daftar toko
+    _items = [..._items, created];
+
+    notifyListeners();
+  }
+
+  // ======================================================
+  // 🔹 TAMBAH SATU TOKO KOSONG (default kosong)
+  // ======================================================
+  Future<void> addEmpty() async {
+    final created = await _service.create(Toko.empty());
+    _items = [..._items, created];
+    notifyListeners();
+  }
+
+  // ======================================================
+  // 🔹 HAPUS TOKO BERDASARKAN INDEX
+  // ======================================================
   Future<void> deleteAt(int index) async {
     final item = _items[index];
+
+    // Jika data sudah tersimpan di server → hapus dari backend
     if (item.id != null) {
-      // kalau sudah punya id dari server
       await _service.delete(item.id!);
     }
+
+    // Hapus dari daftar lokal
     _items.removeAt(index);
 
-    // kalau setelah dihapus list jadi kosong, tambahkan 1 kotak kosong
-    if (_items.isEmpty) {
-      _items = [Toko.empty()];
-    }
+
 
     notifyListeners();
   }
-
 }

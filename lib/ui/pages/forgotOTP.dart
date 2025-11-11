@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_theme.dart';
 import '../../core/app_routes.dart';
+import '../widgets/button.dart';
 
 
 class ForgotOTPPage extends StatefulWidget {
@@ -26,25 +27,37 @@ class _ForgotOTPPageState extends State<ForgotOTPPage> {
 
   void _submit() {
     final otp = _otpControllers.map((c) => c.text).join();
+
     if (otp.length < 4) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppTheme.error,
-          content: Text('Masukkan kode OTP lengkap',
-              style: GoogleFonts.poppins(color: Colors.white)),
+          content: Text(
+            'Masukkan kode OTP lengkap',
+            style: GoogleFonts.poppins(color: Colors.white),
+          ),
         ),
       );
       return;
     }
-    // TODO: verifikasi OTP ke backend
+
+    // Simulasi verifikasi OTP sukses
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: AppTheme.primaryRed,
-        content: Text('OTP diverifikasi (simulasi)',
-            style: GoogleFonts.poppins(color: Colors.white)),
+        backgroundColor: AppTheme.success,
+        content: Text(
+          'OTP diverifikasi (simulasi)',
+          style: GoogleFonts.poppins(color: Colors.white),
+        ),
       ),
     );
+
+    // Setelah diverifikasi, pindah ke halaman Set New Password
+    Future.delayed(const Duration(milliseconds: 800), () {
+      Navigator.pushReplacementNamed(context, AppRoutes.setNewPassword);
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -218,47 +231,9 @@ class _ForgotOTPPageState extends State<ForgotOTPPage> {
                       const SizedBox(height: 50),
 
                       // ===== BUTTON SEND =====
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: DecoratedBox(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment(-1.0, -0.05),
-                                  end: Alignment(1.0, 0.05),
-                                  colors: [
-                                    AppTheme.primaryOrange,
-                                    AppTheme.primaryRed
-                                  ],
-                                ),
-                              ),
-                              child: ElevatedButton(
-                                onPressed: _submit,
-                                style: ElevatedButton.styleFrom(
-                                  elevation: 0,
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius:
-                                    BorderRadius.all(Radius.circular(24)),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Send',
-                                  style: GoogleFonts.poppins(
-                                    color: AppTheme.primaryWhite,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      Button(
+                        label: 'Send',
+                        onPressed: _submit,
                       ),
 
                       const SizedBox(height: 30),

@@ -5,6 +5,8 @@ import '../../core/app_routes.dart';
 import '../../data/services/signup_service.dart'; // ✅ ganti ke SignupService
 import '../../data/models/signup_request.dart';
 import '../../data/models/signup_response.dart';
+import '../widgets/notif_popup.dart';
+import '../widgets/button.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -22,7 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscure = true;
   bool _isLoading = false;
 
-  final SignupService _signupService = SignupService(); // ✅ service benar
+  final _signupService = SignupService();
 
   @override
   void dispose() {
@@ -38,7 +40,8 @@ class _RegisterPageState extends State<RegisterPage> {
     final x = v?.trim() ?? '';
     if (x.isEmpty) return 'Username tidak boleh kosong';
     final re = RegExp(
-        r'^(?=.{3,20}$)(?![._-])(?!.*[._-]{2})[a-zA-Z0-9._-]+(?<![._-])$');
+      r'^(?=.{3,20}$)(?![._-])(?!.*[._-]{2})[a-zA-Z0-9._-]+(?<![._-])$',
+    );
     if (!re.hasMatch(x)) {
       return 'Gunakan 3–20 karakter: huruf/angka . _ - (tidak boleh diawali/diakhiri simbol)';
     }
@@ -72,13 +75,12 @@ class _RegisterPageState extends State<RegisterPage> {
   InputDecoration _dec({
     required String hint,
     required IconData icon,
-    required Color iconColor,
     Widget? suffix,
     required Color fieldFill,
   }) {
     return InputDecoration(
       hintText: hint,
-      prefixIcon: Icon(icon, color: iconColor),
+      prefixIcon: Icon(icon, color: AppTheme.textPrimary),
       suffixIcon: suffix,
       filled: true,
       fillColor: fieldFill,
@@ -105,26 +107,34 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     try {
-      final SignupResponse response = await _signupService.signup(request); // ✅ panggil service
+      final SignupResponse response = await _signupService.signup(request);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.green,
+      // ✅ Jika berhasil daftar
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => NotifPopup.success(
+          context,
+          response.message.isNotEmpty
+              ? response.message
+              : 'Pendaftaran berhasil!',
         ),
       );
 
-      // ✅ Setelah berhasil daftar, arahkan ke login
+      // Tunggu popup selesai animasi
+      await Future.delayed(const Duration(seconds: 3));
+
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, AppRoutes.login);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Pendaftaran gagal: $e'),
-          backgroundColor: Colors.red,
-        ),
+      //  Jika gagal daftar
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => NotifPopup.error(context, 'Pendaftaran gagal: $e'),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -133,10 +143,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final size = MediaQuery.of(context).size;
-
-    final topH = size.height * 0.42;
-    const logoW = 146.0;
+    final topH = MediaQuery.of(context).size.height * 0.42;
 
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
@@ -181,8 +188,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         const Positioned(
                           top: 0,
                           child: SizedBox(
-                            width: logoW,
-                            height: logoW,
+                            width: 146,
+                            height: 146,
                             child: Image(
                               image: AssetImage('assets/images/logo3.png'),
                               fit: BoxFit.contain,
@@ -190,7 +197,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         Positioned(
-                          top: logoW,
+                          top: 146,
                           child: Text(
                             'Kasir Madura',
                             style: GoogleFonts.poppins(
@@ -260,7 +267,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           decoration: _dec(
                             hint: 'Enter your username',
                             icon: Icons.person_outline_rounded,
-                            iconColor: AppTheme.textPrimary,
                             fieldFill: cs.surface,
                           ),
                           validator: _vUsername,
@@ -284,7 +290,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           decoration: _dec(
                             hint: 'Enter your number',
                             icon: Icons.phone_outlined,
-                            iconColor: AppTheme.textPrimary,
                             fieldFill: cs.surface,
                           ),
                           validator: _vPhone,
@@ -309,7 +314,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           decoration: _dec(
                             hint: 'Enter your password',
                             icon: Icons.lock_outline_rounded,
-                            iconColor: AppTheme.textPrimary,
                             suffix: IconButton(
                               onPressed: () =>
                                   setState(() => _obscure = !_obscure),
@@ -327,34 +331,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         const SizedBox(height: 28),
 
-                        // Tombol Register
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isLoading
-                                  ? Colors.grey
-                                  : AppTheme.primaryRed,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                                : Text(
-                              'Next',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.primaryWhite,
-                              ),
-                            ),
-                          ),
+                        // button regis
+                        Button(
+                          label: 'Sing up',
+                          onPressed: _isLoading ? null : _submit,
+                          isLoading: _isLoading,
                         ),
 
                         const SizedBox(height: 16),
@@ -367,16 +348,21 @@ class _RegisterPageState extends State<RegisterPage> {
                             children: [
                               Text(
                                 "Have an account?",
-                                style: text.bodyMedium
-                                    ?.copyWith(color: cs.onSurface),
+                                style: text.bodyMedium?.copyWith(
+                                  color: cs.onSurface,
+                                ),
                               ),
                               InkWell(
                                 onTap: () => Navigator.pushReplacementNamed(
-                                    context, AppRoutes.login),
+                                  context,
+                                  AppRoutes.login,
+                                ),
                                 borderRadius: BorderRadius.circular(6),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 2, vertical: 4),
+                                    horizontal: 2,
+                                    vertical: 4,
+                                  ),
                                   child: Text(
                                     "Sign In",
                                     style: text.bodyMedium?.copyWith(

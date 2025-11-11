@@ -12,6 +12,7 @@ import '../ui/pages/laporanPenjualan.dart';
 import '../ui/pages/editProdukPage.dart';
 import '../data/models/product.dart';
 import '../ui/pages/tambahPenggunaPage.dart';
+import '../ui/pages/setNewPassword.dart';
 
 class AppRoutes {
   // route names
@@ -20,6 +21,7 @@ class AppRoutes {
   static const String register = '/register';
   static const String forgot = '/forgot';
   static const String forgotOTP = '/forgot-otp';
+  static const String setNewPassword = '/set-new-password';
   static const String dashboard = '/dashboard';
   static const String tambahToko = '/tambah-toko';
   static const String laporanPenjualan = '/laporan-penjualan';
@@ -36,6 +38,7 @@ class AppRoutes {
     register: (_) => const RegisterPage(),
     forgot: (_) => const ForgotPasswordPage(),
     forgotOTP: (_) => const ForgotOTPPage(),
+    setNewPassword: (_) => const SetNewPasswordPage(),
     dashboard: (_) => const DashboardPage(),
     tambahToko: (_) => const TambahToko(),
     laporanPenjualan: (_) => const LaporanPenjualanPage(),

@@ -1,8 +1,8 @@
-// lib/ui/pages/tambahPenggunaPage.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
+import './popupEditKasir.dart';
 import '../../core/app_theme.dart';
 import '../../data/models/toko.dart';
 import '../../state/toko_controller.dart';
@@ -96,10 +96,10 @@ class _TambahPenggunaView extends StatelessWidget {
           final toko = c.items[i];
           return _PenggunaCard(
             key: ValueKey(toko.id ?? i),
+            index: i,               // ➕ KIRIM i
             data: toko,
-            // Hanya izinkan berubahnya 'namaKasir'
-            onSave: (kasirBaru) {
-              c.saveAt(i, toko.copyWith(namaKasir: kasirBaru));
+            onSave: (updatedToko) { // menerima full model
+              c.saveAt(i, updatedToko);
             },
           );
         },
@@ -112,11 +112,14 @@ class _TambahPenggunaView extends StatelessWidget {
 /// - Nama Toko & Alamat: hanya tampil (read-only)
 /// - Nama Kasir: bisa diubah
 class _PenggunaCard extends StatefulWidget {
+  final int index;  // ➕ tambah ini
   final Toko data;
-  final ValueChanged<String> onSave;
+  final ValueChanged<Toko> onSave;  // juga akan diperbaiki
+
 
   const _PenggunaCard({
     super.key,
+    required this.index,
     required this.data,
     required this.onSave,
   });
@@ -127,13 +130,14 @@ class _PenggunaCard extends StatefulWidget {
 
 class _PenggunaCardState extends State<_PenggunaCard> {
   late final TextEditingController _kasirC;
-  bool _editing = true;
+  bool _editing = false;
 
   @override
   void initState() {
     super.initState();
     _kasirC = TextEditingController(text: _normalizeKasir(widget.data.namaKasir));
-    // Jika kasir sudah terisi “bener”, default non-editing
+
+    // Jika sudah ada nama kasir → default tidak editing
     if (_kasirC.text.trim().isNotEmpty && _kasirC.text.trim() != '-') {
       _editing = false;
     }
@@ -156,78 +160,112 @@ class _PenggunaCardState extends State<_PenggunaCard> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.primaryCream,
-        border: Border.all(color: AppTheme.border, width: 1),
         borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: AppTheme.border),
         boxShadow: const [
-          BoxShadow(color: AppTheme.shadowLight, blurRadius: 6, offset: Offset(0, 3)),
+          BoxShadow(
+            color: AppTheme.shadowLight,
+            offset: Offset(0, 3),
+            blurRadius: 6,
+          )
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Baris judul toko (nama toko)
-          Text('Nama Toko:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
+          /// =========================
+          /// NAMA TOKO
+          /// =========================
+          Text('Nama toko :',
+              style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 3),
           Text(
-            widget.data.namaToko?.isEmpty == true ? '—' : widget.data.namaToko!,
+            widget.data.namaToko?.isEmpty == true
+                ? '—'
+                : widget.data.namaToko!,
             style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // Alamat (read-only)
-          Text('Alamat:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
+          /// =========================
+          /// ALAMAT
+          /// =========================
+          Text('Alamat :',
+              style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 3),
           Text(
-            widget.data.alamat?.isEmpty == true ? '—' : widget.data.alamat!,
+            widget.data.alamat?.isEmpty == true
+                ? '—'
+                : widget.data.alamat!,
             style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // Nama Kasir (editable)
-          Text('Nama Kasir:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          _editing
-              ? TextField(
-            controller: _kasirC,
-            decoration: const InputDecoration(
-              hintText: 'Masukkan nama kasir',
-            ),
-          )
-              : Text(
-            _kasirC.text.trim().isEmpty ? '—' : _kasirC.text.trim(),
-            style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
+          /// =========================
+          /// ROW: Nama Kasir + Tombol Edit/Simpan
+          /// =========================
+          Text(
+            'Nomor telepon :',
+            style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
+          const SizedBox(height: 3),
+          Text(
+            (widget.data.nomorTelp ?? '').isEmpty ? '—' : widget.data.nomorTelp!,
+            style: t.bodyMedium?.copyWith(color: AppTheme.balckicon),
+          ),
+          const SizedBox(height: 10),
 
-          const SizedBox(height: 14),
+          Text(
+            'Nama kasir :',
+            style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            widget.data.namaKasir.isEmpty ? '—' : widget.data.namaKasir,
+            style: t.bodyMedium?.copyWith(color: AppTheme.balckicon),
+          ),
+          const SizedBox(height: 20),
 
-          // Tombol Simpan/Edit
           Align(
             alignment: Alignment.centerRight,
-            child: OutlinedButton(
-              onPressed: () {
-                if (_editing) {
-                  final val = _kasirC.text.trim();
-                  // Biarkan kosong sebagai "-" saat disimpan
-                  widget.onSave(val.isEmpty ? '-' : val);
-                }
-                setState(() => _editing = !_editing);
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final result = await showDialog(
+                  context: context,
+                  builder: (_) => PopupEditKasir(
+                    initialNama: widget.data.namaKasir,
+                    initialTelp: widget.data.nomorTelp,
+                    initialPass: widget.data.password,
+                    onSave: (nama, telp, pass) {
+                      final updated = widget.data.copyWith(
+                        namaKasir: nama,
+                        nomorTelp: telp,
+                        password: pass,
+                      );
+                      widget.onSave(updated);
+                      setState(() {}); // refresh card
+                    },
+                  ),
+                );
               },
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryOrange, width: 1.5),
-                foregroundColor: AppTheme.primaryOrange,
-                backgroundColor: Colors.transparent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryRed,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
-              child: Text(
-                _editing ? 'Simpan' : 'Edit',
+              icon: const Icon(Icons.edit_note_rounded, size: 22, color: Colors.white),
+              label: Text(
+                'Edit',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: AppTheme.primaryOrange,
+                  fontSize: 15,
                 ),
               ),
             ),
@@ -237,3 +275,4 @@ class _PenggunaCardState extends State<_PenggunaCard> {
     );
   }
 }
+

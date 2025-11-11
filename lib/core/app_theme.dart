@@ -17,6 +17,7 @@ class AppTheme {
   static const Color textSubtle     = Color(0xFF718096);
   static const Color border         = Color(0xFFE2E8F0);
   static const Color accentOrange = Color(0xFFF6AD55);
+  static const Color balckicon = Color(0xFF2E2A2A);
 
 
 
