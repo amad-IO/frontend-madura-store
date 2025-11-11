@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
 import '../../data/models/product.dart';
+import 'dart:io';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({super.key, required this.product, this.onAdd});
   final Product product;
   final VoidCallback? onAdd;
+  bool get isLocalImage => product.imageUrl.isNotEmpty && !product.imageUrl.startsWith('http');
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +25,32 @@ class ProductCard extends StatelessWidget {
             child: Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-                  child: Image.network(product.imageUrl, fit: BoxFit.cover, width: double.infinity),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  child: product.imageUrl.isEmpty
+                      ? Container(
+                    color: AppTheme.primaryCream,
+                    child: const Center(
+                      child: Icon(Icons.image_outlined, size: 50, color: AppTheme.textSubtle),
+                    ),
+                  )
+                      : isLocalImage
+                      ? Image.file(
+                    File(product.imageUrl),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: AppTheme.textSubtle),
+                  )
+                      : Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: AppTheme.textSubtle),
+                  ),
                 ),
+
                 Positioned(
                   right: 6, bottom: 6,
                   child: GestureDetector(

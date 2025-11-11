@@ -17,6 +17,8 @@ dependencies:
   dio: ^5.7.0          # <— tambahkan ini
   flutter_svg: ^2.0.10+1  # <— pindahkan dari dev_dependencies ke sini
   # http: ^1.2.2       # <— kalau sudah pakai Dio, ini bisa DIHAPUS agar tidak dobel
+  dotted_border: ^2.0.0+3
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:

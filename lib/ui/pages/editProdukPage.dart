@@ -1,10 +1,10 @@
-// lib/ui/pages/editProdukPage.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_theme.dart';
 import '../../state/product_controller.dart';
 import '../../data/models/product.dart';
+import 'popupEditProduk.dart';
 
 class EditProdukPage extends StatefulWidget {
   const EditProdukPage({super.key});
@@ -30,71 +30,175 @@ class _EditProdukPageState extends State<EditProdukPage> {
       create: (_) => ProductController(),
       child: Scaffold(
         backgroundColor: AppTheme.primaryCream,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // ===== HEADER GRADIENT + SEARCH =====
-              _HeaderArea(
-                title: 'Produk',
-                searchController: _searchC,
-                onBack: () => Navigator.pop(context),
-                onChanged: (q) => setState(() => _query = q.trim().toLowerCase()),
-              ),
-
-              // ===== TABEL LIST =====
-              Expanded(
-                child: Consumer<ProductController>(
-                  builder: (context, ctrl, _) {
-                    final all = ctrl.items;
-                    final items = _query.isEmpty
-                        ? all
-                        : all.where((p) {
-                      final nama = p.name.toLowerCase();
-                      final kategori = (p.category ?? '').toLowerCase();
-                      return nama.contains(_query) || kategori.contains(_query);
-                    }).toList();
-
-                    if (items.isEmpty) {
-                      return _EmptyState(onRefresh: () {});
-                    }
-
-                    return Column(
+        body: Column(
+          children: [
+            // ===== HEADER MIRIP LAPORAN PENJUALAN =====
+            PreferredSize(
+              preferredSize: const Size.fromHeight(180),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(50)),
+                child: Container(
+                  decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
+                  child: SafeArea(
+                    child: Column(
                       children: [
-                        const _TableHeaderStrip(),
-                        Expanded(
-                          child: ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                            itemCount: items.length,
-                            separatorBuilder: (_, __) => const Divider(
-                              color: AppTheme.border,
-                              thickness: 1,
-                              height: 16,
+                        SizedBox(
+                          height: 80,
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                left: 8,
+                                top: 8,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    color: AppTheme.primaryCream,
+                                  ),
+                                  onPressed: () => Navigator.pop(context),
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Text(
+                                  'Produk',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    color: AppTheme.primaryCream,
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 250),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 15),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryCream,
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: AppTheme.shadowLight,
+                                    blurRadius: 12,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: TextField(
+                                controller: _searchC,
+                                onChanged: (q) =>
+                                    setState(() => _query = q.trim().toLowerCase()),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  hintText: 'Cari',
+                                  hintStyle: GoogleFonts.poppins(
+                                    color: AppTheme.textSubtle,
+                                    fontSize: 16,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    size: 20,
+                                    color: AppTheme.textSubtle,
+                                  ),
+                                  contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 10),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    borderSide: const BorderSide(
+                                      color: AppTheme.primaryRed,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  filled: false,
+                                ),
+                              ),
                             ),
-                            itemBuilder: (_, i) {
-                              final p = items[i];
-                              return _ProductRow(
-                                product: p,
-                                onEdit: () => _openFormProduk(context, product: p),
-                              );
-                            },
                           ),
                         ),
                       ],
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
+            ),
 
-              // ===== TOMBOL TAMBAH =====
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                child: _PrimaryGradientButton(
-                  label: 'Tambah barang',
-                  onTap: () => _openFormProduk(context),
-                ),
+            // ===== TABEL PRODUK =====
+            Expanded(
+              child: Consumer<ProductController>(
+                builder: (context, ctrl, _) {
+                  final all = ctrl.items;
+                  final items = _query.isEmpty
+                      ? all
+                      : all.where((p) {
+                    final nama = p.name.toLowerCase();
+                    final kategori = (p.category ?? '').toLowerCase();
+                    return nama.contains(_query) || kategori.contains(_query);
+                  }).toList();
+
+                  if (items.isEmpty) {
+                    return _EmptyState(onRefresh: () {});
+                  }
+
+                  return Column(
+                    children: [
+                      const _TableHeaderStrip(),
+                      Expanded(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                          itemCount: items.length,
+                          separatorBuilder: (_, __) => const Divider(
+                            color: AppTheme.border,
+                            thickness: 1,
+                            height: 16,
+                          ),
+                          itemBuilder: (_, i) {
+                            final p = items[i];
+                            return _ProductRow(
+                              product: p,
+                              onEdit: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => PopupEditProduk(product: p)),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+
+            // ===== TOMBOL TAMBAH =====
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: _PrimaryGradientButton(
+                label: 'Tambah barang',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PopupEditProduk()),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
