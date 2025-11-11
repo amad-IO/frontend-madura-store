@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../data/models/toko.dart';
 import '../../state/toko_controller.dart';
+import '../widgets/notif_popup.dart';
+import './popupTambahToko.dart';
+
 
 class TambahToko extends StatelessWidget {
   const TambahToko({super.key});
@@ -11,7 +14,6 @@ class TambahToko extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      // sementara pakai mock; nanti ganti ke TokoController.http()
       create: (_) => TokoController.mock()..load(),
       child: const _TambahTokoView(),
     );
@@ -24,10 +26,12 @@ class _TambahTokoView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<TokoController>();
-    final t = Theme.of(context).textTheme;
 
     return Scaffold(
       backgroundColor: AppTheme.primaryCream,
+      resizeToAvoidBottomInset: false, // ✅ biar tombol gak naik saat keyboard muncul
+
+      // ✅ AppBar tetap seperti biasa
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(150),
         child: AppBar(
@@ -44,7 +48,6 @@ class _TambahTokoView extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Tombol back di kiri atas
                     Positioned(
                       left: 8,
                       top: 8,
@@ -57,8 +60,6 @@ class _TambahTokoView extends StatelessWidget {
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
-
-                    // Isi di tengah (ikon + teks)
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -87,74 +88,98 @@ class _TambahTokoView extends StatelessWidget {
         ),
       ),
 
+      // ✅ BODY (list toko)
       body: c.loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
+          : ListView.builder(
         padding: const EdgeInsets.all(20),
-        children: [
-          const SizedBox(height: 10),
-          ...c.items.asMap().entries.map((entry) {
-            final i = entry.key;
-            final e = entry.value;
-            return _TokoCard(
-              key: ValueKey(e.id ?? i),
-              data: e,
-              onSave: (val) => c.saveAt(i, val),
-              onDelete: () => c.deleteAt(i), // <--- ini kuncinya
-            );
-          }),
+        itemCount: c.items.length,
+        itemBuilder: (context, i) {
+          final toko = c.items[i];
+          return _TokoCard(
+            key: ValueKey(toko.id ?? i),
+            index: i,
+            data: toko,
+            onSave: (updatedToko) {
+              c.saveAt(i, updatedToko);
+              showDialog(
+                context: context,
+                builder: (_) => NotifPopup.success(
+                  context,
+                  'Toko baru berhasil disimpan',
+                ),
+              );
+            },
+          );
+        },
+      ),
 
-          const SizedBox(height: 30),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 320), // batas lebar maksimum
-              child: SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(24),
+      // ✅ Tombol tetap di bawah layar (tidak ikut scroll / keyboard)
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.fromLTRB(45, 8, 45, 20),
+        decoration: const BoxDecoration(
+          color: AppTheme.primaryCream,
+        ),
+        child: SizedBox(
+          height: 55,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: ElevatedButton(
+              // 🔽 Bagian ini yang kamu ubah
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (_) => PopupTambahToko(
+                    index: c.items.length,        // ← INI YANG WAJIB ADA
+                    onSave: (tokoBaru) {
+                      c.addItem(tokoBaru);        // tambah toko baru
+                    },
                   ),
-                  child: ElevatedButton(
-                    onPressed: () => c.addEmpty(),
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: Colors.transparent, // biar gradient terlihat
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(
-                      'Tambah Toko',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
+                );
+              },
+              // 🔼 sampai sini
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Text(
+                'Tambah Toko',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 20),
-        ],
+        ),
       ),
+
     );
   }
 }
 
+/// ===========================================================
+/// CARD TOKO (Nama toko dan alamat saja)
+/// ===========================================================
 class _TokoCard extends StatefulWidget {
+  final int index;
   final Toko data;
   final ValueChanged<Toko> onSave;
-  final VoidCallback onDelete;
 
   const _TokoCard({
     super.key,
+    required this.index,
     required this.data,
     required this.onSave,
-    required this.onDelete,     // <-- WAJIB
   });
 
   @override
@@ -162,23 +187,22 @@ class _TokoCard extends StatefulWidget {
 }
 
 class _TokoCardState extends State<_TokoCard> {
-  late final TextEditingController _n;
-  late final TextEditingController _a;
-  //late final TextEditingController _k; //untuk kasir
+  late final TextEditingController _namaC;
+  late final TextEditingController _alamatC;
   bool _editing = true;
 
   @override
   void initState() {
     super.initState();
-    _n = TextEditingController(text: widget.data.namaToko);
-    _a = TextEditingController(text: widget.data.alamat);
-    //_k = TextEditingController(text: widget.data.namaKasir); //punya kasir supaya ga tampil di add toko
+    _namaC = TextEditingController(text: widget.data.namaToko);
+    _alamatC = TextEditingController(text: widget.data.alamat);
     if (!widget.data.isEmpty) _editing = false;
   }
 
   @override
   void dispose() {
-    _n.dispose(); _a.dispose(); // _k.dispose(); //kasir
+    _namaC.dispose();
+    _alamatC.dispose();
     super.dispose();
   }
 
@@ -188,85 +212,198 @@ class _TokoCardState extends State<_TokoCard> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.primaryCream,
-        border: Border.all(color: AppTheme.border, width: 1),
         borderRadius: BorderRadius.circular(30),
-        boxShadow: const [BoxShadow(color: AppTheme.shadowLight, blurRadius: 6, offset: Offset(0, 3))],
+        border: Border.all(color: AppTheme.border),
+        boxShadow: const [
+          BoxShadow(
+            color: AppTheme.shadowLight,
+            offset: Offset(0, 3),
+            blurRadius: 6,
+          )
+        ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          IconButton(
-            tooltip: 'Hapus',
-            onPressed: widget.onDelete,
-            icon: const Icon(Icons.delete_outline, color: AppTheme.textPrimary),
-          ),
-        ]),
-        Text('Nama Toko:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 2),
-        _editing ? TextField(controller: _n, decoration: const InputDecoration(hintText: 'Masukkan nama toko'))
-            : Text(_n.text.isEmpty ? '—' : _n.text, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
-        const SizedBox(height: 8),
-        Text('Alamat:', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 2),
-        _editing ? TextField(controller: _a, decoration: const InputDecoration(hintText: 'Masukkan alamat'))
-            : Text(_a.text.isEmpty ? '—' : _a.text, style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle)),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Kiri: "Nama Kasir: -"
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    'Nama Kasir:',
-                    style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '-', // nilai kasir (fix: selalu '-' sesuai requirement)
-                    style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
-                  ),
-                ],
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Nama toko
+          Text('Nama toko :',
+              style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 3),
+          _editing
+              ? TextField(
+            controller: _namaC,
+            decoration: const InputDecoration(
+              hintText: 'Masukkan nama toko',
+              border: InputBorder.none,
+              isDense: true,
             ),
+          )
+              : Text(
+            _namaC.text.isEmpty ? '—' : _namaC.text,
+            style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
+          ),
+          const SizedBox(height: 10),
 
-            // Kanan: tombol Simpan/Edit (outlined transparan)
-            OutlinedButton(
-              onPressed: () {
-                if (_editing) {
-                  widget.onSave(
-                    widget.data.copyWith(
-                      namaToko: _n.text,
-                      alamat: _a.text,
-                      namaKasir: "-",
+          /// Alamat
+          Text('Alamat :',
+              style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 3),
+          _editing
+              ? TextField(
+            controller: _alamatC,
+            decoration: const InputDecoration(
+              hintText: 'Masukkan alamat toko',
+              border: InputBorder.none,
+              isDense: true,
+            ),
+          )
+              : Text(
+            _alamatC.text.isEmpty ? '—' : _alamatC.text,
+            style: t.bodyMedium?.copyWith(color: AppTheme.textSubtle),
+          ),
+          const SizedBox(height: 10),
+
+          /// Nomor Telepon dan Kasir (statis '-')
+          Text(
+            'Nomor telepon :',
+            style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 3),
+          Text('—', style: t.bodyMedium?.copyWith(color: AppTheme.balckicon)),
+          const SizedBox(height: 10),
+          Text(
+            'Nama kasir :',
+            style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 3),
+          Text('—', style: t.bodyMedium?.copyWith(color: AppTheme.balckicon)),
+          const SizedBox(height: 16),
+
+          /// Tombol Simpan/Edit
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // ==========================
+              // 🗑 DELETE BUTTON
+              // ==========================
+              ElevatedButton.icon(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      backgroundColor: AppTheme.primaryCream,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      title: Text(
+                        "Hapus Toko?",
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryRed,
+                        ),
+                      ),
+                      content: Text(
+                        "Apakah Anda yakin ingin menghapus toko ini?",
+                        style: GoogleFonts.poppins(fontSize: 14),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text("Batal"),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            Navigator.pop(context); // tutup dialog
+
+                            final c = Provider.of<TokoController>(context, listen: false);
+                            await c.deleteAt(widget.index);
+
+                            showDialog(
+                              context: context,
+                              builder: (_) => NotifPopup.success(
+                                context,
+                                "Toko berhasil dihapus",
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "Hapus",
+                            style: TextStyle(color: AppTheme.primaryRed),
+                          ),
+                        ),
+                      ],
                     ),
                   );
-                }
-                setState(() => _editing = !_editing);
-              },
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryOrange, width: 1.5),
-                foregroundColor: AppTheme.primaryOrange,
-                backgroundColor: Colors.transparent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-              child: Text(
-                _editing ? 'Simpan' : 'Edit',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: AppTheme.primaryOrange,
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryRed,
+                  foregroundColor: Colors.white,
+                  elevation: 3,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Icons.delete, size: 18, color: Colors.white),
+                label: Text(
+                  "Hapus",
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ]),
+
+              const SizedBox(width: 10),
+
+              // ==========================
+              // ✏ EDIT BUTTON
+              // ==========================
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (_) => PopupTambahToko(
+                      index: widget.index,
+                      initialNama: widget.data.namaToko,
+                      initialAlamat: widget.data.alamat,
+                      onSave: (updatedToko) {
+                        final updated = widget.data.copyWith(
+                          namaToko: updatedToko.namaToko,
+                          alamat: updatedToko.alamat,
+                        );
+                        widget.onSave(updated);
+                        setState(() {}); // refresh card
+                      },
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryRed,
+                  foregroundColor: Colors.white,
+                  elevation: 3,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Icons.edit_note_rounded, size: 18, color: Colors.white),
+                label: Text(
+                  'Edit',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
