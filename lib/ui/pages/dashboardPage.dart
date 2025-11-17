@@ -8,45 +8,66 @@ import '../../state/product_controller.dart';
 import '../widgets/product_card.dart';
 import '../widgets/humberger.dart';
 import '../../../core/app_routes.dart';
+import '../widgets/cart_bar.dart';
+import '../../state/cart_controller.dart';
 
 
-class DashboardPage extends StatelessWidget {
+
+
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      context.read<ProductController>().loadProducts();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
 
-    return ChangeNotifierProvider(
-      create: (_) => ProductController(),
-      child: Scaffold(
-        backgroundColor: AppTheme.primaryCream,
-        body: SafeArea(
-          top: false,
-          child: Builder(
-            builder: (context) {
-              final topPad = MediaQuery.of(context).padding.top;
+    return Scaffold(
+      backgroundColor: AppTheme.primaryCream,
+      body: SafeArea(
+        top: false,
+        child: Builder(
+          builder: (context) {
+            final topPad = MediaQuery.of(context).padding.top;
 
-              // ukuran layout
-              const double headerBase = 220;
-              const double profileCardH = 110;
-              const double profileOverlap = 40;
+            // ukuran layout
+            const double headerBase = 220;
+            const double profileCardH = 110;
+            const double profileOverlap = 40;
 
-              final double headerH = headerBase + topPad;
-              final double contentTop = headerH - profileOverlap + profileCardH;
+            final double headerH = headerBase + topPad;
+            final double contentTop =
+                headerH - profileOverlap + profileCardH;
 
-              return Stack(
-                children: [
-                  // ====== PRODUK (scrollable) ======
-                  Positioned.fill(
-                    top: contentTop,
-                    child: Consumer<ProductController>(
-                      builder: (context, ctrl, _) {
-                        final items = ctrl.items;
-                        return GridView.builder(
+            return Stack(
+              children: [
+                // ====== PRODUK LIST ======
+                Positioned.fill(
+                  top: contentTop,
+                  child: Consumer<ProductController>(
+                    builder: (context, ctrl, _) {
+                      final items = ctrl.items;
+
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          await context.read<ProductController>().loadProducts();
+                        },
+                        child: GridView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-                          gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
@@ -55,144 +76,163 @@ class DashboardPage extends StatelessWidget {
                           itemCount: items.length,
                           itemBuilder: (_, i) => ProductCard(
                             product: items[i],
-                            onAdd: () {}, // nanti bisa untuk add-to-cart
                           ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  // ====== HEADER (fixed) ======
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    height: headerH,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(40),
-                          bottomRight: Radius.circular(40),
                         ),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Title di atas tengah
-                          Positioned.fill(
-                            child: Padding(
-                              padding: EdgeInsets.only(top: topPad + 16),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: Text(
-                                  'Madura Store',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.0,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                      );
+                    },
+                  ),
+                ),
 
-                          // Tombol hamburger
-                          Positioned(
-                            left: 20,
-                            bottom: 130,
-                            child: Builder(
-                              builder: (context) => IconButton(
-                                icon: const Icon(
-                                  Icons.menu_rounded,
-                                  size: 40,
+                // ====== HEADER ======
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: headerH,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(40),
+                        bottomRight: Radius.circular(40),
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Title
+                        Positioned.fill(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: topPad + 16),
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Text(
+                                'Madura Store',
+                                style: GoogleFonts.poppins(
                                   color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                splashRadius: 28,
-                                onPressed: () {
-                                  showHamburgerMenu(
-                                    context,
-                                    onLaporan: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushNamed(context, AppRoutes.laporanPenjualan);
-                                    },
-                                    onTambahToko: () {
-                                      Navigator.pop(context); // tutup menu
-                                      Navigator.pushNamed(context, AppRoutes.tambahToko);
-                                    },
-                                    onEditProduk: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushNamed(context, AppRoutes.editProduk);
-                                    },
-                                    onTambahPengguna: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushNamed(context, AppRoutes.tambahPengguna);
-                                    },
-                                    onLogout: () => handleLogout(context),
-                                  );
-                                },
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        ),
 
-                  // ====== PROFILE CARD (fixed) ======
-                  Positioned(
-                    left: 20,
-                    right: 20,
-                    top: headerH - profileOverlap,
-                    height: profileCardH,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentOrange,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: AppTheme.shadowLight,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
+                        // Hamburger Menu
+                        Positioned(
+                          left: 20,
+                          bottom: 130,
+                          child: Builder(
+                            builder: (context) => IconButton(
+                              icon: const Icon(Icons.menu_rounded,
+                                  size: 40, color: Colors.white),
+                              splashRadius: 28,
+                              onPressed: () {
+                                showHamburgerMenu(
+                                  context,
+                                  onLaporan: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                        context, AppRoutes.laporanPenjualan);
+                                  },
+                                  onTambahToko: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                        context, AppRoutes.tambahToko);
+                                  },
+                                  onEditProduk: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                        context, AppRoutes.editProduk);
+                                  },
+                                  onTambahPengguna: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                        context, AppRoutes.tambahPengguna);
+                                  },
+                                  onLogout: () => handleLogout(context),
+                                );
+                              },
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 40,
-                            backgroundImage:
-                            NetworkImage("https://picsum.photos/200"),
-                            backgroundColor: Colors.white,
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "AZTECA CHELSY",
-                                style:
-                                t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Owner",
-                                style:
-                                t.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w400),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+
+                // ====== PROFILE CARD ======
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  top: headerH - profileOverlap,
+                  height: profileCardH,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentOrange,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: AppTheme.shadowLight,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 40,
+                          backgroundImage:
+                          NetworkImage("https://picsum.photos/200"),
+                          backgroundColor: Colors.white,
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "AZTECA CHELSY",
+                              style: t.titleLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Owner",
+                              style: t.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+
+                  left: 0,
+                  right: 0,
+
+                  // jika cart kosong → sorong keluar layar
+                  bottom: context.watch<CartController>().isEmpty ? -120 : 0,
+
+                  child: CartBar(
+                    itemCount: context.watch<CartController>().cartCount,
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.checkoutPage);
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

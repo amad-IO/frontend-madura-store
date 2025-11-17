@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
 import '../../data/models/product.dart';
+import 'package:provider/provider.dart';
+import '../../state/cart_controller.dart';
+import 'dart:io';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({super.key, required this.product, this.onAdd});
   final Product product;
   final VoidCallback? onAdd;
+  bool get isLocalImage => product.imageUrl.isNotEmpty && !product.imageUrl.startsWith('http');
 
   @override
   Widget build(BuildContext context) {
@@ -23,37 +27,85 @@ class ProductCard extends StatelessWidget {
             child: Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-                  child: Image.network(product.imageUrl, fit: BoxFit.cover, width: double.infinity),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  child: product.imageUrl.isEmpty
+                      ? Container(
+                    color: AppTheme.primaryCream,
+                    child: const Center(
+                      child: Icon(Icons.image_outlined, size: 50, color: AppTheme.textSubtle),
+                    ),
+                  )
+                      : isLocalImage
+                      ? Image.file(
+                    File(product.imageUrl),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: AppTheme.textSubtle),
+                  )
+                      : Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: AppTheme.textSubtle),
+                  ),
                 ),
+
                 Positioned(
-                  right: 6, bottom: 6,
+                  right: 6,
+                  bottom: 6,
                   child: GestureDetector(
-                    onTap: onAdd,
+                    onTap: () {
+                      context.read<CartController>().addToCart(product);
+                    },
                     child: Container(
-                      height: 26, width: 26,
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                      child: const Icon(Icons.add, color: AppTheme.primaryRed, size: 18),
+                      height: 26,
+                      width: 26,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: AppTheme.primaryRed,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
+
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(10),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(product.name, style: t.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              Row(children: [
-                const Icon(Icons.star, color: Colors.yellow, size: 14),
-                const SizedBox(width: 4),
-                Text('${product.rating} (542)', style: t.labelMedium?.copyWith(color: Colors.white)),
-              ]),
-              const SizedBox(height: 4),
-              Text('Rp${product.price}', style: t.titleSmall?.copyWith(color: Colors.white)),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.nama,
+                  style: t.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+
+                // Karena model Product tidak punya rating
+                Row(children: [
+                  const Icon(Icons.star, color: Colors.yellow, size: 14),
+                  const SizedBox(width: 4),
+                  Text('4.8', style: t.labelMedium?.copyWith(color: Colors.white)),
+                ]),
+
+                const SizedBox(height: 4),
+                Text(
+                  'Rp${product.hargaJual.toInt()}',
+                  style: t.titleSmall?.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
           ),
+
         ],
       ),
     );
