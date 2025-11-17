@@ -33,7 +33,7 @@ class _TambahTokoView extends StatelessWidget {
 
       // ✅ AppBar tetap seperti biasa
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(150),
+        preferredSize: const Size.fromHeight(180),
         child: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

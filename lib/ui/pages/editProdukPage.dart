@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_theme.dart';
-import '../../state/product_controller.dart';
 import '../../data/models/product.dart';
-import 'popupEditProduk.dart';
+import 'TambahEditProduk.dart';
+import '../../state/product_controller.dart';
+
 
 class EditProdukPage extends StatefulWidget {
   const EditProdukPage({super.key});
@@ -18,6 +19,18 @@ class _EditProdukPageState extends State<EditProdukPage> {
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+
+    // ambil controller setelah widget selesai build
+    Future.microtask(() {
+      final ctrl = context.read<ProductController>();
+      ctrl.loadProducts();   // ⬅ WAJIB supaya produk dari backend muncul
+    });
+  }
+
+
+  @override
   void dispose() {
     _searchC.dispose();
     super.dispose();
@@ -25,132 +38,144 @@ class _EditProdukPageState extends State<EditProdukPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<ProductController>(
-      // Provider dibuat DI SINI, jadi jangan pakai context.read di luar/ sebelum build.
-      create: (_) => ProductController(),
-      child: Scaffold(
-        backgroundColor: AppTheme.primaryCream,
-        body: Column(
-          children: [
-            // ===== HEADER MIRIP LAPORAN PENJUALAN =====
-            PreferredSize(
-              preferredSize: const Size.fromHeight(180),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(50)),
-                child: Container(
-                  decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
-                  child: SafeArea(
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: 80,
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                left: 8,
-                                top: 8,
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.arrow_back_ios_new_rounded,
-                                    color: AppTheme.primaryCream,
-                                  ),
-                                  onPressed: () => Navigator.pop(context),
+    return Scaffold(
+      backgroundColor: AppTheme.primaryCream,
+      body: Column(
+        children: [
+          // ===== HEADER MIRIP LAPORAN PENJUALAN =====
+          PreferredSize(
+            preferredSize: const Size.fromHeight(180),
+            child: ClipRRect(
+              borderRadius:
+              const BorderRadius.vertical(bottom: Radius.circular(50)),
+              child: Container(
+                decoration:
+                const BoxDecoration(gradient: AppTheme.primaryGradient),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 80,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: 8,
+                              top: 8,
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  color: AppTheme.primaryCream,
+                                ),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Text(
+                                'Produk',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  color: AppTheme.primaryCream,
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Text(
-                                  'Produk',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    color: AppTheme.primaryCream,
-                                    fontSize: 25,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 250),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 15),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryCream,
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: AppTheme.shadowLight,
-                                    blurRadius: 12,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: TextField(
-                                controller: _searchC,
-                                onChanged: (q) =>
-                                    setState(() => _query = q.trim().toLowerCase()),
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  hintText: 'Cari',
-                                  hintStyle: GoogleFonts.poppins(
-                                    color: AppTheme.textSubtle,
-                                    fontSize: 16,
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    size: 20,
-                                    color: AppTheme.textSubtle,
-                                  ),
-                                  contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 10),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                    borderSide: const BorderSide(
-                                      color: AppTheme.primaryRed,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  filled: false,
+                      ),
+
+                      // ==== SEARCH ====
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 250),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 15),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryCream,
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: AppTheme.shadowLight,
+                                  blurRadius: 12,
+                                  offset: Offset(0, 4),
                                 ),
+                              ],
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: TextField(
+                              controller: _searchC,
+                              onChanged: (q) =>
+                                  setState(() => _query = q.trim().toLowerCase()),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                hintText: 'Cari',
+                                hintStyle: GoogleFonts.poppins(
+                                  color: AppTheme.textSubtle,
+                                  fontSize: 16,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  size: 20,
+                                  color: AppTheme.textSubtle,
+                                ),
+                                contentPadding:
+                                const EdgeInsets.symmetric(vertical: 10),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                  borderSide: BorderSide(
+                                    color: AppTheme.primaryRed,
+                                    width: 1,
+                                  ),
+                                ),
+                                filled: false,
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
 
-            // ===== TABEL PRODUK =====
-            Expanded(
+          // ======== LIST PRODUK =========
+          Expanded(
+            child: RefreshIndicator(
+              color: AppTheme.primaryRed,
+              onRefresh: () async {
+                await context.read<ProductController>().loadProducts();
+              },
               child: Consumer<ProductController>(
                 builder: (context, ctrl, _) {
                   final all = ctrl.items;
                   final items = _query.isEmpty
                       ? all
-                      : all.where((p) {
-                    final nama = p.name.toLowerCase();
-                    final kategori = (p.category ?? '').toLowerCase();
-                    return nama.contains(_query) || kategori.contains(_query);
-                  }).toList();
+                      : all.where((p) => p.nama.toLowerCase().contains(_query)).toList();
 
                   if (items.isEmpty) {
-                    return _EmptyState(onRefresh: () {});
+                    return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 80),
+                        _EmptyState(
+                          onRefresh: () {
+                            context.read<ProductController>().loadProducts();
+                          },
+                        ),
+                      ],
+                    );
                   }
 
                   return Column(
@@ -158,6 +183,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
                       const _TableHeaderStrip(),
                       Expanded(
                         child: ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                           itemCount: items.length,
                           separatorBuilder: (_, __) => const Divider(
@@ -172,7 +198,8 @@ class _EditProdukPageState extends State<EditProdukPage> {
                               onEdit: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => PopupEditProduk(product: p)),
+                                  MaterialPageRoute(
+                                      builder: (_) => TambahEditProduk(product: p)),
                                 );
                               },
                             );
@@ -184,163 +211,25 @@ class _EditProdukPageState extends State<EditProdukPage> {
                 },
               ),
             ),
+          ),
 
-            // ===== TOMBOL TAMBAH =====
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: _PrimaryGradientButton(
-                label: 'Tambah barang',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PopupEditProduk()),
-                  );
-                },
-              ),
+          // ===== TOMBOL TAMBAH PRODUK =====
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: _PrimaryGradientButton(
+              label: 'Tambah barang',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const TambahEditProduk()),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-  }
-
-  /// Form tambah/edit produk (bottom sheet)
-  void _openFormProduk(BuildContext context, {Product? product}) {
-    final isEdit = product != null;
-
-    final nameC  = TextEditingController(text: product?.name ?? '');
-    final priceC = TextEditingController(text: product?.price.toString() ?? '');
-    final stockC = TextEditingController(text: product?.stock.toString() ?? '');
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppTheme.primaryWhite,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        final t = Theme.of(ctx).textTheme;
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.border,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(isEdit ? 'Edit Produk' : 'Tambah Produk', style: t.titleLarge),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: nameC,
-                decoration: const InputDecoration(
-                  labelText: 'Nama produk',
-                  hintText: 'Masukkan nama produk',
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: priceC,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Harga',
-                  hintText: 'cth: 3000',
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: stockC,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Stok',
-                  hintText: 'cth: 20',
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Batal'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final nama  = nameC.text.trim();
-                        final harga = int.tryParse(priceC.text.trim()) ?? 0;
-                        final stok  = int.tryParse(stockC.text.trim()) ?? 0;
-                        if (nama.isEmpty) return;
-
-                        final ctrl = context.read<ProductController>();
-
-                        if (isEdit) {
-                          ctrl.update(Product(
-                            id: product!.id,
-                            name: nama,
-                            price: harga,
-                            stock: stok,
-                            rating: product.rating,
-                            imageUrl: product.imageUrl,
-                            category: product.category,
-                          ));
-                        } else {
-                          final newId = 'p${DateTime.now().millisecondsSinceEpoch}';
-                          ctrl.add(Product(
-                            id: newId,
-                            name: nama,
-                            price: harga,
-                            stock: stok,
-                            rating: 0,
-                            imageUrl: '',
-                            category: '',
-                          ));
-                        }
-
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              isEdit ? 'Produk diperbarui' : 'Produk ditambahkan',
-                              style: t.bodyMedium?.copyWith(color: AppTheme.primaryWhite),
-                            ),
-                          ),
-                        );
-                      },
-                      child: Text(isEdit ? 'Simpan' : 'Tambah'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    ).whenComplete(() {
-      nameC.dispose();
-      priceC.dispose();
-      stockC.dispose();
-    });
   }
 }
 
@@ -469,6 +358,7 @@ class _TableHeaderStrip extends StatelessWidget {
 }
 
 /// Baris produk sesuai desain, dengan tombol "Edit" merah di kanan.
+/// Baris produk sesuai desain, dengan tombol "Edit" merah di kanan.
 class _ProductRow extends StatelessWidget {
   final Product product;
   final VoidCallback onEdit;
@@ -485,29 +375,41 @@ class _ProductRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // PRODUK
         Expanded(
-          flex: 6,
-          child: Text(
-            product.name,
-            style: t.bodyMedium?.copyWith(color: AppTheme.textPrimary),
+          flex: 5,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: Text(
+              product.nama,
+              style: t.bodyMedium?.copyWith(color: AppTheme.textPrimary),
+            ),
           ),
         ),
+
+        // HARGA (tengah & tanpa .0)
         Expanded(
           flex: 3,
           child: Text(
-            product.price.toString(),
+            product.hargaJual.toInt().toString(),
+            textAlign: TextAlign.center,
             style: t.bodyMedium?.copyWith(color: AppTheme.textPrimary),
           ),
         ),
+
+        // STOK (kanan)
         Expanded(
           flex: 2,
           child: Text(
-            product.stock.toString(),
+            product.stok.toString(),
             textAlign: TextAlign.right,
             style: t.bodyMedium?.copyWith(color: AppTheme.textPrimary),
           ),
         ),
+
         const SizedBox(width: 8),
+
+        // BUTTON EDIT
         InkWell(
           onTap: onEdit,
           borderRadius: BorderRadius.circular(8),
@@ -516,7 +418,8 @@ class _ProductRow extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primaryRed),
+                const Icon(Icons.edit_outlined,
+                    size: 18, color: AppTheme.primaryRed),
                 const SizedBox(width: 4),
                 Text(
                   'Edit',
@@ -533,6 +436,7 @@ class _ProductRow extends StatelessWidget {
     );
   }
 }
+
 
 /// Empty state sederhana.
 class _EmptyState extends StatelessWidget {

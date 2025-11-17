@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'core/app_routes.dart';
+import 'state/product_controller.dart';
+//import 'state/toko_controller.dart';
+import 'state/cart_controller.dart';
+
 
 void main() {
-  runApp(const KasirMaduraApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProductController()),
+        ChangeNotifierProvider(create: (_) => CartController()),
+        // ChangeNotifierProvider(create: (_) => TokoController()),
+      ],
+      child: const KasirMaduraApp(),
+    ),
+  );
 }
+
 
 class KasirMaduraApp extends StatelessWidget {
   const KasirMaduraApp({super.key});
@@ -14,9 +29,9 @@ class KasirMaduraApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Kasir Madura',
-      theme: AppTheme.theme,// bisa ThemeMode.system
+      theme: AppTheme.theme,
       initialRoute: AppRoutes.initial,
-        routes: AppRoutes.routes,
+      routes: AppRoutes.routes,
       themeAnimationDuration: const Duration(milliseconds: 300),
     );
   }

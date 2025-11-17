@@ -1,39 +1,31 @@
 class Product {
-  final String id;
-  final String name;
-  final int price;
-  final int stock;           // ✅ tambahkan
-  final double rating;
-  final String imageUrl;
-  final String? category;
+  final int id;
+  final String nama;
+  final double hargaJual;
+  final int stok;
+  final String satuan;
+  final String imageName;
 
-  const Product({
+  Product({
     required this.id,
-    required this.name,
-    required this.price,
-    required this.stock,     // ✅ wajibkan di constructor
-    required this.rating,
-    required this.imageUrl,
-    this.category,
+    required this.nama,
+    required this.hargaJual,
+    required this.stok,
+    required this.satuan,
+    required this.imageName,
   });
 
-  Product copyWith({
-    String? id,
-    String? name,
-    int? price,
-    int? stock,
-    double? rating,
-    String? imageUrl,
-    String? category,
-  }) {
+  String get imageUrl =>
+      "http://localhost:8080/api/produk/gambar/$imageName"; // tampilkan foto
+
+  factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      price: price ?? this.price,
-      stock: stock ?? this.stock,
-      rating: rating ?? this.rating,
-      imageUrl: imageUrl ?? this.imageUrl,
-      category: category ?? this.category,
+      id: json['id'],
+      nama: json['nama'],
+      hargaJual: json['hargaJual'],
+      stok: json['stok'],
+      satuan: json['satuan'],
+      imageName: json['imageName'] ?? "",  // jika null
     );
   }
 }
