@@ -10,14 +10,23 @@ class ProductService {
   // ---------------------------------------------------------
   // GET semua produk
   // ---------------------------------------------------------
-  Future<List<Product>> getProducts() async {
-    final response = await http.get(Uri.parse(baseUrl));
+  Future<List<Product>> getProducts(String token) async {
+    final response = await http.get(
+      Uri.parse(baseUrl),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+      },
+    );
+
+    print("STATUS GET PRODUK : ${response.statusCode}");
+    print("BODY              : ${response.body}");
 
     if (response.statusCode == 200) {
       List data = jsonDecode(response.body);
       return data.map((e) => Product.fromJson(e)).toList();
     } else {
-      throw Exception("Gagal memuat produk");
+      return [];
     }
   }
 
@@ -30,10 +39,14 @@ class ProductService {
     required double hargaJual,
     required int stok,
     required String satuan,
+    required String token,     // 🔥 WAJIB
   }) async {
     var uri = Uri.parse("$baseUrl/add");
 
     var request = http.MultipartRequest("POST", uri);
+
+    // 🔥 HEADER TOKEN WAJIB
+    request.headers["Authorization"] = "Bearer $token";
 
     request.fields["nama"] = nama;
     request.fields["hargaJual"] = hargaJual.toString();
@@ -44,7 +57,6 @@ class ProductService {
 
     var response = await request.send();
 
-    // 🔥 Tambahkan log ini
     print("========== ADD PRODUCT RESPONSE ==========");
     print("STATUS CODE : ${response.statusCode}");
     print("REASON      : ${response.reasonPhrase}");
@@ -53,9 +65,8 @@ class ProductService {
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
-
   // ---------------------------------------------------------
-  // UPDATE produk (gunakan POST, bukan PUT)
+  // UPDATE produk
   // ---------------------------------------------------------
   Future<bool> updateProduct({
     required int id,
@@ -64,10 +75,14 @@ class ProductService {
     required double hargaJual,
     required int stok,
     required String satuan,
+    required String token,     // 🔥 WAJIB
   }) async {
     var uri = Uri.parse("$baseUrl/update/$id");
 
     var request = http.MultipartRequest("POST", uri);
+
+    // 🔥 TOKEN
+    request.headers["Authorization"] = "Bearer $token";
 
     request.fields["nama"] = nama;
     request.fields["hargaJual"] = hargaJual.toString();
@@ -75,20 +90,25 @@ class ProductService {
     request.fields["satuan"] = satuan;
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
-        "image",
-        imageFile.path,
-      ));
+      request.files.add(await http.MultipartFile.fromPath("image", imageFile.path));
     }
 
     var response = await request.send();
     return response.statusCode == 200;
   }
 
-  Future<bool> deleteProduct(int id) async {
+  // ---------------------------------------------------------
+  // DELETE produk
+  // ---------------------------------------------------------
+  Future<bool> deleteProduct(int id, String token) async {
     final url = Uri.parse("$baseUrl/delete/$id");
 
-    final response = await http.delete(url);
+    final response = await http.delete(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",   // 🔥 WAJIB
+      },
+    );
 
     print("========== DELETE PRODUCT RESPONSE ==========");
     print("STATUS CODE : ${response.statusCode}");
@@ -97,6 +117,4 @@ class ProductService {
 
     return response.statusCode == 200;
   }
-
-  
 }

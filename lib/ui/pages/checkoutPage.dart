@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../state/cart_controller.dart';
+import '../widgets/popup_struk.dart';
+
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -203,9 +205,35 @@ class _CheckoutPageState extends State<CheckoutPage> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: ElevatedButton(
-              onPressed: () {
-                // TODO: Simpan transaksi
+              onPressed: () async {
+                final cart = context.read<CartController>();
+
+                if (bayarC.text.isEmpty) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(const SnackBar(content: Text("Masukkan uang pembayaran")));
+                  return;
+                }
+
+                if (kembalian < 0) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(const SnackBar(content: Text("Uang tidak cukup")));
+                  return;
+                }
+
+                // TODO: Kurangi stok di database di sini!
+
+                showDialog(
+                  context: context,
+                  builder: (_) => PopupStruk(
+                    cart: cart,
+                    dibayar: bayarC.text,
+                    kembalian: kembalian,
+                  ),
+                );
+
+                cart.clear(); // reset keranjang
               },
+
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: Colors.transparent,

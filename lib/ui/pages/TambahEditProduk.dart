@@ -65,7 +65,6 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
                     height: 80,
                     child: Stack(
                       children: [
-                        // 🔹 Tombol back di kiri atas
                         Positioned(
                           left: 8,
                           top: 8,
@@ -77,12 +76,10 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
                             onPressed: () => Navigator.pop(context),
                           ),
                         ),
-                        // 🔹 Teks judul di tengah bawah
                         Align(
                           alignment: Alignment.bottomCenter,
                           child: Text(
                             isEdit ? 'Edit Produk' : 'Tambah Produk',
-                            // ✅ judul dinamis
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               color: AppTheme.primaryCream,
@@ -94,7 +91,7 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16), // ✅ jarak kecil di bawah judul
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -107,16 +104,15 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ============= AREA UPLOAD FOTO TANPA DELETE =============
+
+            // UPLOAD FOTO
             GestureDetector(
               onTap: () async {
                 final pickedFile = await _picker.pickImage(
                   source: ImageSource.gallery,
                 );
                 if (pickedFile != null) {
-                  setState(() {
-                    _imageFile = File(pickedFile.path);
-                  });
+                  setState(() => _imageFile = File(pickedFile.path));
                 }
               },
               child: DottedBorder(
@@ -134,31 +130,32 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
                   ),
                   child: _imageFile != null
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.file(_imageFile!, fit: BoxFit.cover),
-                        )
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.file(_imageFile!, fit: BoxFit.cover),
+                  )
                       : widget.product?.imageName != null &&
-                            widget.product!.imageName!.isNotEmpty
+                      widget.product!.imageName!.isNotEmpty
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.network(
-                            "http://192.168.1.6:8080/api/produk/gambar/${widget.product!.imageName}",
-                            fit: BoxFit.cover,
-                          ),
-                        )
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.network(
+                      "http://localhost:8080/api/produk/gambar/${widget.product!.imageName}",
+                      fit: BoxFit.cover,
+                    ),
+                  )
                       : const Center(
-                          child: Icon(
-                            Icons.add_photo_alternate_rounded,
-                            size: 50,
-                            color: AppTheme.primaryRed,
-                          ),
-                        ),
+                    child: Icon(
+                      Icons.add_photo_alternate_rounded,
+                      size: 50,
+                      color: AppTheme.primaryRed,
+                    ),
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 35),
 
+            // BUTTON DELETE JIKA EDIT
             if (isEdit)
               Align(
                 alignment: Alignment.centerRight,
@@ -203,7 +200,7 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
                       final ok = await ctrl.delete(widget.product!.id);
 
                       if (ok) {
-                        Navigator.pop(context); // keluar dari halaman Edit
+                        Navigator.pop(context);
 
                         Future.delayed(const Duration(milliseconds: 300), () {
                           showDialog(
@@ -221,7 +218,6 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
                   child: Container(
                     height: 50,
                     width: 50,
-                    decoration: BoxDecoration(shape: BoxShape.circle),
                     child: const Icon(
                       Icons.delete_outline_rounded,
                       color: AppTheme.primaryOrange,
@@ -232,6 +228,8 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
               ),
 
             const SizedBox(height: 10),
+
+            // FORM
             _InputField(
               label: 'Input Nama Produk',
               hint: 'Input nama produk anda',
@@ -256,22 +254,33 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
             ),
             const SizedBox(height: 40),
 
-            // Tombol Save
-            // =============== TOMBOL SAVE (punyamu tetap) ===============
+            // ===============================
+            // TOMBOL SAVE (SUDAH DIBENERKAN)
+            // ===============================
             Center(
               child: InkWell(
                 onTap: () async {
                   final nama = namaC.text.trim();
-                  final harga = int.tryParse(hargaC.text.trim()) ?? 0;
-                  final stok = int.tryParse(stokC.text.trim()) ?? 0;
+                  final hargaStr = hargaC.text.trim();
+                  final stokStr = stokC.text.trim();
 
-                  if (nama.isEmpty) return;
+                  if (nama.isEmpty || hargaStr.isEmpty || stokStr.isEmpty) {
+                    print("❌ Semua field wajib diisi!");
+                    return;
+                  }
+
+                  final harga = int.tryParse(hargaStr);
+                  final stok = int.tryParse(stokStr);
+
+                  if (harga == null || stok == null) {
+                    print("❌ Harga & stok harus berupa angka!");
+                    return;
+                  }
 
                   final ctrl = context.read<ProductController>();
                   bool success = false;
 
                   if (isEdit) {
-                    // UPDATE
                     final updated = Product(
                       id: widget.product!.id,
                       nama: nama,
@@ -283,9 +292,8 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
 
                     success = await ctrl.update(updated, imageFile: _imageFile);
                   } else {
-                    // ADD
                     if (_imageFile == null) {
-                      print("❌ Gambar wajib diisi untuk tambah produk");
+                      print("❌ Gambar wajib diisi untuk tambah produk!");
                       return;
                     }
 
@@ -349,7 +357,6 @@ class _TambahEditProdukState extends State<TambahEditProduk> {
   }
 }
 
-// Widget untuk input form
 class _InputField extends StatelessWidget {
   final String label;
   final String hint;
@@ -367,7 +374,6 @@ class _InputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -382,7 +388,6 @@ class _InputField extends StatelessWidget {
         const SizedBox(height: 6),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
-          // ✅ atur jarak kanan kiri
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -408,7 +413,6 @@ class _InputField extends StatelessWidget {
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 10,
-                    vertical: 0,
                   ),
                 ),
               ),
