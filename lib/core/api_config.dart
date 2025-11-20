@@ -1,19 +1,4 @@
-// lib/core/api_config.dart
 import 'dart:io';
-
-/// Kelas ini menyimpan konfigurasi BASE URL untuk koneksi ke backend.
-///
-/// Cara pakai:
-///   import 'package:kasirmadura/core/api_config.dart';
-///   final url = Uri.parse('${ApiConfig.baseUrl}/api/products');
-///
-/// Cara run Flutter:
-///   flutter run --dart-define=BASE_URL=http://192.168.1.9:8080
-///
-/// Catatan:
-/// - Gunakan IP laptop kamu (cek via `ipconfig`).
-/// - Jika beda jaringan, aktifkan `adb reverse tcp:8080 tcp:8080`
-///   lalu gunakan `http://127.0.0.1:8080`.
 
 class ApiConfig {
   // BASE_URL bisa dikirim saat run dengan --dart-define.
