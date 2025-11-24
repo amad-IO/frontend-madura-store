@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import '../models/signup_request.dart';
 import '../models/signup_response.dart';
 
